@@ -1,4 +1,4 @@
-// src/app/(tabs)/cash.tsx
+// src/app/cash.tsx - CORRECTED VERSION WITH SCREENLAYOUT
 import React, { useState } from 'react';
 import {
   View,
@@ -20,6 +20,7 @@ import {
   Currency 
 } from '../types/finance';
 import { formatCompactCurrency } from '../utils/currency';
+import ScreenLayout from '../components/ScreenLayout';
 
 const CashScreen: React.FC = () => {
   const [cashEntries, setCashEntries] = useState<CashEntry[]>([
@@ -356,30 +357,32 @@ const CashScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      {renderHeader()}
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderTotalCard()}
-        {renderQuickActions()}
+    <ScreenLayout>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        {renderHeader()}
         
-        <View style={styles.cashContainer}>
-          <Text style={styles.sectionTitle}>Your Cash Entries</Text>
-          {cashEntries.length > 0 ? (
-            cashEntries.map(renderCashEntry)
-          ) : (
-            <View style={styles.emptyCash}>
-              <MaterialIcons name="account-balance-wallet" size={64} color="#E0E0E0" />
-              <Text style={styles.emptyText}>No cash entries yet</Text>
-              <Text style={styles.emptySubtext}>Add your first cash entry to get started</Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-      
-      {renderAddCashModal()}
-    </SafeAreaView>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {renderTotalCard()}
+          {renderQuickActions()}
+          
+          <View style={styles.cashContainer}>
+            <Text style={styles.sectionTitle}>Your Cash Entries</Text>
+            {cashEntries.length > 0 ? (
+              cashEntries.map(renderCashEntry)
+            ) : (
+              <View style={styles.emptyCash}>
+                <MaterialIcons name="account-balance-wallet" size={64} color="#E0E0E0" />
+                <Text style={styles.emptyText}>No cash entries yet</Text>
+                <Text style={styles.emptySubtext}>Add your first cash entry to get started</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+        
+        {renderAddCashModal()}
+      </SafeAreaView>
+    </ScreenLayout>
   );
 };
 
@@ -481,6 +484,7 @@ const styles = StyleSheet.create({
   },
   cashContainer: {
     paddingHorizontal: 20,
+    marginBottom: 100, // Extra space for floating button
   },
   cashCard: {
     backgroundColor: '#FFFFFF',

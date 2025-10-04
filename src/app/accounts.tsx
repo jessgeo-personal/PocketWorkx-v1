@@ -1,4 +1,4 @@
-// src/app/(tabs)/accounts.tsx
+// src/app/cash.tsx - CORRECTED VERSION WITH SCREENLAYOUT
 import React, { useState } from 'react';
 import {
   View,
@@ -8,30 +8,27 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
-  BankAccount, 
-  Money 
+  CashEntry, 
+  Money, 
+  Currency 
 } from '../types/finance';
 import { formatCompactCurrency } from '../utils/currency';
+import ScreenLayout from '../components/ScreenLayout';
 
-const AccountsScreen: React.FC = () => {
-  const [accounts, setAccounts] = useState<BankAccount[]>([
+const CashScreen: React.FC = () => {
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>([
     {
       id: '1',
-      name: 'Primary Savings',
-      type: 'savings',
-      bank: 'ICICI Bank',
-      branch: 'Bandra West',
-      ifscCode: 'ICIC0000001',
-      accountNumber: '****2847',
-      balance: { amount: 4567800, currency: 'INR' },
-      isActive: true,
-      openingDate: new Date('2020-01-15'),
-      interestRate: 3.5,
-      minimumBalance: { amount: 10000, currency: 'INR' },
+      description: 'Wallet Cash',
+      amount: { amount: 15500, currency: 'INR' },
+      location: 'Personal Wallet',
       // Required enhanced fields
       encryptedData: {
         encryptionKey: '',
@@ -41,7 +38,7 @@ const AccountsScreen: React.FC = () => {
       },
       auditTrail: {
         createdBy: 'user',
-        createdAt: new Date('2020-01-15'),
+        createdAt: new Date('2025-10-01'),
         updatedBy: 'user',
         updatedAt: new Date(),
         version: 1,
@@ -51,17 +48,9 @@ const AccountsScreen: React.FC = () => {
     },
     {
       id: '2',
-      name: 'Salary Account',
-      type: 'salary',
-      bank: 'HDFC Bank',
-      branch: 'Powai',
-      ifscCode: 'HDFC0000123',
-      accountNumber: '****5691',
-      balance: { amount: 2845600, currency: 'INR' },
-      isActive: true,
-      openingDate: new Date('2019-06-01'),
-      interestRate: 3.0,
-      minimumBalance: { amount: 0, currency: 'INR' },
+      description: 'Home Safe',
+      amount: { amount: 45000, currency: 'INR' },
+      location: 'Home - Bedroom Safe',
       // Required enhanced fields
       encryptedData: {
         encryptionKey: '',
@@ -71,7 +60,7 @@ const AccountsScreen: React.FC = () => {
       },
       auditTrail: {
         createdBy: 'user',
-        createdAt: new Date('2019-06-01'),
+        createdAt: new Date('2025-09-15'),
         updatedBy: 'user',
         updatedAt: new Date(),
         version: 1,
@@ -81,17 +70,9 @@ const AccountsScreen: React.FC = () => {
     },
     {
       id: '3',
-      name: 'Emergency Fund',
-      type: 'savings',
-      bank: 'SBI',
-      branch: 'Mumbai Central',
-      ifscCode: 'SBIN0000456',
-      accountNumber: '****7123',
-      balance: { amount: 1236400, currency: 'INR' },
-      isActive: true,
-      openingDate: new Date('2021-03-10'),
-      interestRate: 2.7,
-      minimumBalance: { amount: 5000, currency: 'INR' },
+      description: 'Emergency Cash',
+      amount: { amount: 25000, currency: 'INR' },
+      location: 'Car Dashboard',
       // Required enhanced fields
       encryptedData: {
         encryptionKey: '',
@@ -101,7 +82,29 @@ const AccountsScreen: React.FC = () => {
       },
       auditTrail: {
         createdBy: 'user',
-        createdAt: new Date('2021-03-10'),
+        createdAt: new Date('2025-08-20'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
+    },
+    {
+      id: '4',
+      description: 'Office Petty Cash',
+      amount: { amount: 8000, currency: 'INR' },
+      location: 'Office Desk',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2025-10-03'),
         updatedBy: 'user',
         updatedAt: new Date(),
         version: 1,
@@ -111,47 +114,93 @@ const AccountsScreen: React.FC = () => {
     },
   ]);
 
-  const totalBalance = accounts
-    .filter(account => account.isActive)
-    .reduce((sum, account) => sum + account.balance.amount, 0);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [newCashDescription, setNewCashDescription] = useState('');
+  const [newCashAmount, setNewCashAmount] = useState('');
+  const [newCashLocation, setNewCashLocation] = useState('');
 
-  const getBankColor = (bank: string) => {
-    const colors = {
-      'ICICI Bank': '#ED6C02',
-      'HDFC Bank': '#004C8F',
-      'SBI': '#1976D2',
-      'Axis Bank': '#9C27B0',
-      'Kotak Bank': '#E53935',
-    };
-    return colors[bank as keyof typeof colors] || '#666666';
+  const totalCash = cashEntries.reduce((sum, entry) => sum + entry.amount.amount, 0);
+
+  const getLocationIcon = (location: string) => {
+    if (location?.toLowerCase().includes('wallet')) return 'account-balance-wallet';
+    if (location?.toLowerCase().includes('home')) return 'home';
+    if (location?.toLowerCase().includes('car')) return 'directions-car';
+    if (location?.toLowerCase().includes('office')) return 'work';
+    if (location?.toLowerCase().includes('safe')) return 'security';
+    return 'place';
   };
 
-  const getBankIcon = (bank: string) => {
-    const icons = {
-      'ICICI Bank': 'account-balance',
-      'HDFC Bank': 'account-balance',
-      'SBI': 'account-balance',
-      'Axis Bank': 'account-balance',
-      'Kotak Bank': 'account-balance',
-    };
-    return icons[bank as keyof typeof icons] || 'account-balance';
+  const getLocationColor = (location: string) => {
+    if (location?.toLowerCase().includes('wallet')) return '#4CAF50';
+    if (location?.toLowerCase().includes('home')) return '#2196F3';
+    if (location?.toLowerCase().includes('car')) return '#FF9800';
+    if (location?.toLowerCase().includes('office')) return '#9C27B0';
+    if (location?.toLowerCase().includes('safe')) return '#795548';
+    return '#666666';
   };
 
-  const getAccountTypeLabel = (type: string) => {
-    const labels = {
-      savings: 'Savings Account',
-      salary: 'Salary Account',
-      current: 'Current Account',
-      checking: 'Checking Account',
-      business: 'Business Account',
+  const handleAddCash = () => {
+    if (!newCashDescription.trim() || !newCashAmount.trim()) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    const amount = parseFloat(newCashAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
+    const newEntry: CashEntry = {
+      id: Date.now().toString(),
+      description: newCashDescription.trim(),
+      amount: { amount, currency: 'INR' },
+      location: newCashLocation.trim() || 'Not specified',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date(),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     };
-    return labels[type as keyof typeof labels] || 'Account';
+
+    setCashEntries([...cashEntries, newEntry]);
+    setNewCashDescription('');
+    setNewCashAmount('');
+    setNewCashLocation('');
+    setIsAddModalVisible(false);
+  };
+
+  const handleDeleteCash = (id: string) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to remove this cash entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => {
+          setCashEntries(cashEntries.filter(entry => entry.id !== id));
+        }},
+      ]
+    );
   };
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>Bank Accounts</Text>
-      <TouchableOpacity style={styles.addButton}>
+      <Text style={styles.headerTitle}>Physical Cash</Text>
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => setIsAddModalVisible(true)}
+      >
         <MaterialIcons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
@@ -159,75 +208,51 @@ const AccountsScreen: React.FC = () => {
 
   const renderTotalCard = () => (
     <LinearGradient
-      colors={['#2E7D32', '#388E3C']}
+      colors={['#27AE60', '#2ECC71']}
       style={styles.totalCard}
     >
-      <Text style={styles.totalLabel}>Total Account Balance</Text>
+      <Text style={styles.totalLabel}>Total Physical Cash</Text>
       <Text style={styles.totalAmount}>
-        {formatCompactCurrency(totalBalance, 'INR')}
+        {formatCompactCurrency(totalCash, 'INR')}
       </Text>
-      <Text style={styles.accountCount}>
-        {accounts.filter(acc => acc.isActive).length} Active Accounts
+      <Text style={styles.entriesCount}>
+        {cashEntries.length} Cash {cashEntries.length === 1 ? 'Entry' : 'Entries'}
       </Text>
     </LinearGradient>
   );
 
-  const renderAccountCard = (account: BankAccount) => (
-    <TouchableOpacity key={account.id} style={styles.accountCard}>
-      <View style={styles.accountHeader}>
-        <View style={styles.accountLeft}>
-          <View style={[styles.bankIcon, { backgroundColor: getBankColor(account.bank) }]}>
+  const renderCashEntry = (entry: CashEntry) => (
+    <TouchableOpacity key={entry.id} style={styles.cashCard}>
+      <View style={styles.cashHeader}>
+        <View style={styles.cashLeft}>
+          <View style={[styles.locationIcon, { backgroundColor: getLocationColor(entry.location || '') }]}>
             <MaterialIcons 
-              name={getBankIcon(account.bank) as any} 
+              name={getLocationIcon(entry.location || '') as any} 
               size={24} 
               color="#FFFFFF" 
             />
           </View>
-          <View style={styles.accountDetails}>
-            <Text style={styles.accountName}>{account.name}</Text>
-            <Text style={styles.accountType}>{getAccountTypeLabel(account.type)}</Text>
-            <Text style={styles.bankName}>{account.bank}</Text>
-            <Text style={styles.accountNumber}>{account.accountNumber}</Text>
+          <View style={styles.cashDetails}>
+            <Text style={styles.cashDescription}>{entry.description}</Text>
+            <Text style={styles.cashLocation}>{entry.location}</Text>
+            <Text style={styles.cashDate}>
+              Added on {entry.auditTrail.createdAt.toLocaleDateString()}
+            </Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.moreButton}>
-          <MaterialIcons name="more-vert" size={20} color="#666" />
+        <TouchableOpacity 
+          style={styles.deleteButton}
+          onPress={() => handleDeleteCash(entry.id)}
+        >
+          <MaterialIcons name="delete" size={20} color="#E74C3C" />
         </TouchableOpacity>
       </View>
       
-      <View style={styles.balanceContainer}>
-        <View style={styles.balanceLeft}>
-          <Text style={styles.balanceLabel}>Available Balance</Text>
-          <Text style={styles.balanceAmount}>
-            {formatCompactCurrency(account.balance.amount, account.balance.currency)}
-          </Text>
-        </View>
-        
-        <View style={styles.balanceRight}>
-          <TouchableOpacity style={styles.actionBtn}>
-            <MaterialIcons name="swap-horiz" size={16} color="#4A90E2" />
-            <Text style={styles.actionBtnText}>Transfer</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={styles.accountFooter}>
-        <View style={styles.accountInfo}>
-          <Text style={styles.infoLabel}>Interest Rate</Text>
-          <Text style={styles.infoValue}>{account.interestRate}% p.a.</Text>
-        </View>
-        
-        <View style={styles.accountInfo}>
-          <Text style={styles.infoLabel}>Min. Balance</Text>
-          <Text style={styles.infoValue}>
-            {formatCompactCurrency(account.minimumBalance?.amount || 0, account.minimumBalance?.currency || 'INR')}
-          </Text>
-        </View>
-        
-        <View style={styles.accountInfo}>
-          <Text style={styles.infoLabel}>Branch</Text>
-          <Text style={styles.infoValue}>{account.branch}</Text>
-        </View>
+      <View style={styles.cashAmount}>
+        <Text style={styles.amountLabel}>Amount</Text>
+        <Text style={styles.amountValue}>
+          {formatCompactCurrency(entry.amount.amount, entry.amount.currency)}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -236,44 +261,128 @@ const AccountsScreen: React.FC = () => {
     <View style={styles.quickActionsContainer}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActionGrid}>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="add-circle" size={24} color="#2E7D32" />
-          <Text style={styles.actionText}>Add Account</Text>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => setIsAddModalVisible(true)}
+        >
+          <MaterialIcons name="add-circle" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Add Cash</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="swap-horiz" size={24} color="#2E7D32" />
-          <Text style={styles.actionText}>Transfer Money</Text>
+          <MaterialIcons name="swap-horiz" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Move Cash</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="receipt-long" size={24} color="#2E7D32" />
-          <Text style={styles.actionText}>Statements</Text>
+          <MaterialIcons name="receipt" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Record Expense</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="account-balance" size={24} color="#2E7D32" />
-          <Text style={styles.actionText}>Checkbook</Text>
+          <MaterialIcons name="account-balance" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Deposit to Bank</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      {renderHeader()}
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderTotalCard()}
-        {renderQuickActions()}
-        
-        <View style={styles.accountsContainer}>
-          <Text style={styles.sectionTitle}>Your Accounts</Text>
-          {accounts.map(renderAccountCard)}
+  const renderAddCashModal = () => (
+    <Modal
+      visible={isAddModalVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setIsAddModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Cash Entry</Text>
+            <TouchableOpacity onPress={() => setIsAddModalVisible(false)}>
+              <MaterialIcons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalBody}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Description *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newCashDescription}
+                onChangeText={setNewCashDescription}
+                placeholder="e.g., Wallet Cash, Home Safe"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Amount (₹) *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newCashAmount}
+                onChangeText={setNewCashAmount}
+                placeholder="0"
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Location</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newCashLocation}
+                onChangeText={setNewCashLocation}
+                placeholder="e.g., Personal Wallet, Home Safe"
+              />
+            </View>
+          </View>
+          
+          <View style={styles.modalFooter}>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setIsAddModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.addCashButton}
+              onPress={handleAddCash}
+            >
+              <Text style={styles.addButtonText}>Add Cash</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </Modal>
+  );
+
+  return (
+    <ScreenLayout>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        {renderHeader()}
+        
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {renderTotalCard()}
+          {renderQuickActions()}
+          
+          <View style={styles.cashContainer}>
+            <Text style={styles.sectionTitle}>Your Cash Entries</Text>
+            {cashEntries.length > 0 ? (
+              cashEntries.map(renderCashEntry)
+            ) : (
+              <View style={styles.emptyCash}>
+                <MaterialIcons name="account-balance-wallet" size={64} color="#E0E0E0" />
+                <Text style={styles.emptyText}>No cash entries yet</Text>
+                <Text style={styles.emptySubtext}>Add your first cash entry to get started</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+        
+        {renderAddCashModal()}
+      </SafeAreaView>
+    </ScreenLayout>
   );
 };
 
@@ -298,7 +407,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
   },
   addButton: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#27AE60',
     borderRadius: 20,
     padding: 8,
   },
@@ -331,7 +440,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 4,
   },
-  accountCount: {
+  entriesCount: {
     fontSize: 12,
     color: '#FFFFFF',
     opacity: 0.8,
@@ -373,14 +482,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  accountsContainer: {
+  cashContainer: {
     paddingHorizontal: 20,
+    marginBottom: 100, // Extra space for floating button
   },
-  accountCard: {
+  cashCard: {
     backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: {
@@ -390,18 +500,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  accountHeader: {
+  cashHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  accountLeft: {
+  cashLeft: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     flex: 1,
   },
-  bankIcon: {
+  locationIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -409,89 +519,129 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  accountDetails: {
+  cashDetails: {
     flex: 1,
   },
-  accountName: {
+  cashDescription: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
     marginBottom: 2,
   },
-  accountType: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 2,
-  },
-  bankName: {
+  cashLocation: {
     fontSize: 14,
     color: '#666666',
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  accountNumber: {
+  cashDate: {
     fontSize: 12,
     color: '#999999',
   },
-  moreButton: {
+  deleteButton: {
     padding: 4,
   },
-  balanceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+  cashAmount: {
+    alignItems: 'flex-end',
   },
-  balanceLeft: {
-    flex: 1,
-  },
-  balanceLabel: {
+  amountLabel: {
     fontSize: 12,
     color: '#666666',
     marginBottom: 4,
   },
-  balanceAmount: {
-    fontSize: 22,
+  amountValue: {
+    fontSize: 20,
     fontWeight: '700',
-    color: '#2E7D32',
+    color: '#27AE60',
   },
-  balanceRight: {
-    alignItems: 'flex-end',
-  },
-  actionBtn: {
-    flexDirection: 'row',
+  emptyCash: {
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666666',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999999',
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '80%',
   },
-  actionBtnText: {
-    fontSize: 12,
-    color: '#4A90E2',
-    marginLeft: 4,
-  },
-  accountFooter: {
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  accountInfo: {
     alignItems: 'center',
-    flex: 1,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
-  infoLabel: {
-    fontSize: 10,
-    color: '#999999',
-    marginBottom: 2,
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A1A1A',
   },
-  infoValue: {
-    fontSize: 11,
-    color: '#666666',
+  modalBody: {
+    padding: 20,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
     fontWeight: '500',
-    textAlign: 'center',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333333',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 12,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#666666',
+  },
+  addCashButton: {
+    backgroundColor: '#27AE60',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 
-export default AccountsScreen;
+export default CashScreen;

@@ -17,6 +17,7 @@ import {
   RealEstateAsset 
 } from '../types/finance';
 import { formatCompactCurrency } from '../utils/currency';
+import ScreenLayout from '../components/ScreenLayout';
 
 const InvestmentsScreen: React.FC = () => {
   const [investments, setInvestments] = useState<Investment[]>([
@@ -353,6 +354,7 @@ const InvestmentsScreen: React.FC = () => {
   );
 
   return (
+     <ScreenLayout>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       {renderHeader()}
@@ -367,6 +369,7 @@ const InvestmentsScreen: React.FC = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </ScreenLayout>
   );
 };
 

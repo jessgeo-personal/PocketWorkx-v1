@@ -1,4 +1,4 @@
-// src/app/(tabs)/crypto.tsx
+// src/app/crypto.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  CryptoHolding, 
-  Money 
+import {
+  CryptoHolding,
+  Money
 } from '../types/finance';
 import { formatCompactCurrency } from '../utils/currency';
+import ScreenLayout from '../components/ScreenLayout';  // ← Added
 
 const CryptoScreen: React.FC = () => {
   const [cryptoAssets, setCryptoAssets] = useState<CryptoHolding[]>([
@@ -25,11 +26,10 @@ const CryptoScreen: React.FC = () => {
       name: 'Bitcoin',
       quantity: 1.078,
       averagePurchasePrice: { amount: 4600000, currency: 'INR' },
-      currentPrice: { amount: 5000000, currency: 'INR' }, // ₹50,00,000 per BTC
-      currentValue: { amount: 5390000, currency: 'INR' }, // ₹53,90,000
+      currentPrice: { amount: 5000000, currency: 'INR' },
+      currentValue: { amount: 5390000, currency: 'INR' },
       exchange: 'WazirX',
       walletType: 'exchange',
-      // Required enhanced fields
       encryptedData: {
         encryptionKey: '',
         encryptionAlgorithm: 'AES-256',
@@ -52,11 +52,10 @@ const CryptoScreen: React.FC = () => {
       name: 'Ethereum',
       quantity: 2.5,
       averagePurchasePrice: { amount: 180000, currency: 'INR' },
-      currentPrice: { amount: 200000, currency: 'INR' }, // ₹2,00,000 per ETH
-      currentValue: { amount: 500000, currency: 'INR' }, // ₹5,00,000
+      currentPrice: { amount: 200000, currency: 'INR' },
+      currentValue: { amount: 500000, currency: 'INR' },
       exchange: 'CoinDCX',
       walletType: 'exchange',
-      // Required enhanced fields
       encryptedData: {
         encryptionKey: '',
         encryptionAlgorithm: 'AES-256',
@@ -79,11 +78,10 @@ const CryptoScreen: React.FC = () => {
       name: 'Solana',
       quantity: 10.5,
       averagePurchasePrice: { amount: 11000, currency: 'INR' },
-      currentPrice: { amount: 12000, currency: 'INR' }, // ₹12,000 per SOL
-      currentValue: { amount: 126000, currency: 'INR' }, // ₹1,26,000
+      currentPrice: { amount: 12000, currency: 'INR' },
+      currentValue: { amount: 126000, currency: 'INR' },
       exchange: 'Binance',
       walletType: 'exchange',
-      // Required enhanced fields
       encryptedData: {
         encryptionKey: '',
         encryptionAlgorithm: 'AES-256',
@@ -103,7 +101,7 @@ const CryptoScreen: React.FC = () => {
   ]);
 
   const totalValue = cryptoAssets.reduce((sum, asset) => sum + asset.currentValue.amount, 0);
-  const totalInvested = cryptoAssets.reduce((sum, asset) => sum + (asset.averagePurchasePrice.amount * asset.quantity), 0);
+  const totalInvested = cryptoAssets.reduce((sum, asset) => sum + asset.averagePurchasePrice.amount * asset.quantity, 0);
   const totalChange24h = totalValue - totalInvested;
 
   const getCryptoIcon = (symbol: string) => {
@@ -130,8 +128,7 @@ const CryptoScreen: React.FC = () => {
 
   const calculateChangePercent = (current: Money, average: Money, quantity: number) => {
     const invested = average.amount * quantity;
-    const currentVal = current.amount;
-    return ((currentVal - invested) / invested) * 100;
+    return ((current.amount - invested) / invested) * 100;
   };
 
   const renderHeader = () => (
@@ -153,10 +150,10 @@ const CryptoScreen: React.FC = () => {
         {formatCompactCurrency(totalValue, 'INR')}
       </Text>
       <View style={styles.changeContainer}>
-        <MaterialIcons 
-          name={totalChange24h >= 0 ? "trending-up" : "trending-down"} 
-          size={16} 
-          color="#FFFFFF" 
+        <MaterialIcons
+          name={totalChange24h >= 0 ? "trending-up" : "trending-down"}
+          size={16}
+          color="#FFFFFF"
         />
         <Text style={styles.changeText}>
           {totalChange24h >= 0 ? '+' : ''}{formatCompactCurrency(Math.abs(totalChange24h), 'INR')} (24h)
@@ -167,7 +164,6 @@ const CryptoScreen: React.FC = () => {
 
   const renderCryptoCard = (asset: CryptoHolding) => {
     const invested = asset.averagePurchasePrice.amount * asset.quantity;
-    const changeAmount = asset.currentValue.amount - invested;
     const changePercent = calculateChangePercent(asset.currentValue, asset.averagePurchasePrice, asset.quantity);
 
     return (
@@ -187,26 +183,23 @@ const CryptoScreen: React.FC = () => {
             <MaterialIcons name="more-vert" size={20} color="#666" />
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.valueContainer}>
           <Text style={styles.valueAmount}>
             {formatCompactCurrency(asset.currentValue.amount, asset.currentValue.currency)}
           </Text>
           <View style={styles.priceChangeContainer}>
-            <MaterialIcons 
-              name={changePercent >= 0 ? "trending-up" : "trending-down"} 
-              size={16} 
-              color={changePercent >= 0 ? "#27AE60" : "#E74C3C"} 
+            <MaterialIcons
+              name={changePercent >= 0 ? "trending-up" : "trending-down"}
+              size={16}
+              color={changePercent >= 0 ? "#27AE60" : "#E74C3C"}
             />
-            <Text style={[
-              styles.priceChange, 
-              { color: changePercent >= 0 ? "#27AE60" : "#E74C3C" }
-            ]}>
+            <Text style={[styles.priceChange, { color: changePercent >= 0 ? "#27AE60" : "#E74C3C" }]}>
               {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.assetFooter}>
           <Text style={styles.investedAmount}>
             Invested: {formatCompactCurrency(invested, 'INR')}
@@ -227,17 +220,17 @@ const CryptoScreen: React.FC = () => {
           <MaterialIcons name="add-circle" size={24} color="#9945FF" />
           <Text style={styles.actionText}>Add Crypto Acct</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.actionButton}>
           <MaterialIcons name="pie-chart" size={24} color="#9945FF" />
           <Text style={styles.actionText}>Portfolio</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="swap-horiz" size={24} color="#9945FF" />
+          <MaterialIcons name="trending-up" size={24} color="#9945FF" />
           <Text style={styles.actionText}>Trade</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.actionButton}>
           <MaterialIcons name="history" size={24} color="#9945FF" />
           <Text style={styles.actionText}>History</Text>
@@ -247,20 +240,20 @@ const CryptoScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      {renderHeader()}
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderTotalCard()}
-        {renderQuickActions()}
-        
-        <View style={styles.assetsContainer}>
-          <Text style={styles.sectionTitle}>Your Crypto Assets</Text>
-          {cryptoAssets.map(renderCryptoCard)}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <ScreenLayout>  {/* ← Added */}
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        {renderHeader()}
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {renderTotalCard()}
+          {renderQuickActions()}
+          <View style={styles.assetsContainer}>
+            <Text style={styles.sectionTitle}>Your Crypto Assets</Text>
+            {cryptoAssets.map(renderCryptoCard)}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ScreenLayout>  {/* ← Added */}
   );
 };
 
@@ -299,10 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
@@ -352,10 +342,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -367,6 +354,7 @@ const styles = StyleSheet.create({
   },
   assetsContainer: {
     paddingHorizontal: 20,
+    marginBottom: 100, // Extra space for floating button
   },
   assetCard: {
     backgroundColor: '#FFFFFF',
@@ -375,10 +363,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
