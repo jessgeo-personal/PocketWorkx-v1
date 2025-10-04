@@ -1,4 +1,4 @@
-// src/app/(tabs)/loans.tsx
+// src/app/(tabs)/credit-cards.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -15,120 +15,170 @@ import {
   CreditCard, 
   Money 
 } from '../../types/finance';
+import { formatCompactCurrency } from '../../utils/currency';
 
-
-interface Loan {
-  id: string;
-  type: 'home' | 'personal' | 'car' | 'education' | 'gold';
-  bank: string;
-  accountNumber: string;
-  principalAmount: number;
-  currentBalance: number;
-  interestRate: number;
-  tenure: number; // months
-  emi: number;
-  nextPaymentDate: Date;
-  startDate: Date;
-  endDate: Date;
-  isActive: boolean;
-}
-
-const LoansScreen: React.FC = () => {
-  const [loans, setLoans] = useState<Loan[]>([
+const CreditCardsScreen: React.FC = () => {
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([
     {
       id: '1',
-      type: 'home',
       bank: 'HDFC Bank',
-      accountNumber: '7845',
-      principalAmount: 5000000, // ₹50 lakhs
-      currentBalance: 3750000, // ₹37.5 lakhs remaining
-      interestRate: 8.5,
-      tenure: 240, // 20 years
-      emi: 43500,
-      nextPaymentDate: new Date('2025-11-01'),
-      startDate: new Date('2020-01-01'),
-      endDate: new Date('2040-01-01'),
+      cardNumber: '****4523',
+      cardType: 'visa',
+      cardName: 'MoneyBack+ Credit Card',
+      creditLimit: { amount: 500000, currency: 'INR' },
+      currentBalance: { amount: 125000, currency: 'INR' },
+      availableCredit: { amount: 375000, currency: 'INR' },
+      minimumPayment: { amount: 6250, currency: 'INR' },
+      paymentDueDate: new Date('2025-11-15'),
+      statementDate: new Date('2025-10-20'),
+      interestRate: 3.5,
+      annualFee: { amount: 500, currency: 'INR' },
+      rewardProgram: {
+        type: 'cashback',
+        rate: 1.5,
+        currentBalance: 2340,
+      },
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2022-01-15'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '2',
-      type: 'car',
       bank: 'ICICI Bank',
-      accountNumber: '2156',
-      principalAmount: 800000, // ₹8 lakhs
-      currentBalance: 350000, // ₹3.5 lakhs remaining
-      interestRate: 9.2,
-      tenure: 84, // 7 years
-      emi: 12800,
-      nextPaymentDate: new Date('2025-10-15'),
-      startDate: new Date('2022-03-01'),
-      endDate: new Date('2029-03-01'),
+      cardNumber: '****7891',
+      cardType: 'mastercard',
+      cardName: 'Amazon Pay Credit Card',
+      creditLimit: { amount: 300000, currency: 'INR' },
+      currentBalance: { amount: 85000, currency: 'INR' },
+      availableCredit: { amount: 215000, currency: 'INR' },
+      minimumPayment: { amount: 4250, currency: 'INR' },
+      paymentDueDate: new Date('2025-11-20'),
+      statementDate: new Date('2025-10-25'),
+      interestRate: 3.65,
+      annualFee: { amount: 0, currency: 'INR' },
+      rewardProgram: {
+        type: 'points',
+        rate: 2,
+        currentBalance: 15680,
+      },
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2021-08-10'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '3',
-      type: 'personal',
-      bank: 'SBI',
-      accountNumber: '9834',
-      principalAmount: 300000, // ₹3 lakhs
-      currentBalance: 125000, // ₹1.25 lakhs remaining
-      interestRate: 11.5,
-      tenure: 36, // 3 years
-      emi: 10200,
-      nextPaymentDate: new Date('2025-10-20'),
-      startDate: new Date('2023-06-01'),
-      endDate: new Date('2026-06-01'),
+      bank: 'SBI Card',
+      cardNumber: '****2456',
+      cardType: 'rupay',
+      cardName: 'Simply SAVE Credit Card',
+      creditLimit: { amount: 150000, currency: 'INR' },
+      currentBalance: { amount: 42000, currency: 'INR' },
+      availableCredit: { amount: 108000, currency: 'INR' },
+      minimumPayment: { amount: 2100, currency: 'INR' },
+      paymentDueDate: new Date('2025-11-12'),
+      statementDate: new Date('2025-10-18'),
+      interestRate: 3.25,
+      annualFee: { amount: 499, currency: 'INR' },
+      rewardProgram: {
+        type: 'points',
+        rate: 1,
+        currentBalance: 4200,
+      },
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2023-03-20'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
   ]);
 
-  const totalOutstanding = loans
-    .filter(loan => loan.isActive)
-    .reduce((sum, loan) => sum + loan.currentBalance, 0);
+  const totalCreditLimit = creditCards
+    .filter(card => card.isActive)
+    .reduce((sum, card) => sum + card.creditLimit.amount, 0);
 
-  const totalEMI = loans
-    .filter(loan => loan.isActive)
-    .reduce((sum, loan) => sum + loan.emi, 0);
+  const totalCurrentBalance = creditCards
+    .filter(card => card.isActive)
+    .reduce((sum, card) => sum + card.currentBalance.amount, 0);
 
-  const formatCurrency = (amount: number) => {
-    if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(1)} Cr`;
-    } else if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)} L`;
-    } else {
-      return `₹${amount.toLocaleString('en-IN')}`;
-    }
-  };
+  const totalAvailableCredit = creditCards
+    .filter(card => card.isActive)
+    .reduce((sum, card) => sum + card.availableCredit.amount, 0);
 
-  const getLoanTypeIcon = (type: string) => {
-    const icons = {
-      home: 'home',
-      car: 'directions-car',
-      personal: 'person',
-      education: 'school',
-      gold: 'attach-money',
-    };
-    return icons[type as keyof typeof icons] || 'account-balance-wallet';
-  };
-
-  const getLoanTypeColor = (type: string) => {
+  const getCardBrandColor = (cardType: string) => {
     const colors = {
-      home: '#4CAF50',
-      car: '#2196F3',
-      personal: '#FF9800',
-      education: '#9C27B0',
-      gold: '#FFD700',
+      visa: '#1A1F71',
+      mastercard: '#EB001B',
+      amex: '#006FCF',
+      rupay: '#097969',
+      diners: '#0079BE',
     };
-    return colors[type as keyof typeof colors] || '#666666';
+    return colors[cardType as keyof typeof colors] || '#666666';
   };
 
-  const calculateProgress = (principal: number, current: number) => {
-    return ((principal - current) / principal) * 100;
+  const getCardBrandName = (cardType: string) => {
+    const names = {
+      visa: 'VISA',
+      mastercard: 'MasterCard',
+      amex: 'American Express',
+      rupay: 'RuPay',
+      diners: 'Diners Club',
+    };
+    return names[cardType as keyof typeof names] || cardType.toUpperCase();
+  };
+
+  const calculateUtilization = (current: Money, limit: Money) => {
+    return (current.amount / limit.amount) * 100;
+  };
+
+  const getUtilizationColor = (percentage: number) => {
+    if (percentage < 30) return '#27AE60';
+    if (percentage < 70) return '#F39C12';
+    return '#E74C3C';
   };
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>Loans</Text>
+      <Text style={styles.headerTitle}>Credit Cards</Text>
       <TouchableOpacity style={styles.addButton}>
         <MaterialIcons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>
@@ -138,93 +188,123 @@ const LoansScreen: React.FC = () => {
   const renderSummaryCards = () => (
     <View style={styles.summaryContainer}>
       <LinearGradient
-        colors={['#E74C3C', '#C0392B']}
+        colors={['#8E44AD', '#9B59B6']}
         style={styles.summaryCard}
       >
-        <Text style={styles.summaryLabel}>Total Outstanding</Text>
-        <Text style={styles.summaryAmount}>{formatCurrency(totalOutstanding)}</Text>
+        <Text style={styles.summaryLabel}>Total Credit Limit</Text>
+        <Text style={styles.summaryAmount}>
+          {formatCompactCurrency(totalCreditLimit, 'INR')}
+        </Text>
+        <Text style={styles.summarySubtext}>
+          Available: {formatCompactCurrency(totalAvailableCredit, 'INR')}
+        </Text>
       </LinearGradient>
       
-      <View style={styles.emiCard}>
-        <Text style={styles.emiLabel}>Monthly EMI</Text>
-        <Text style={styles.emiAmount}>{formatCurrency(totalEMI)}</Text>
-        <Text style={styles.emiCount}>{loans.filter(l => l.isActive).length} Active Loans</Text>
+      <View style={styles.utilizationCard}>
+        <Text style={styles.utilizationLabel}>Total Outstanding</Text>
+        <Text style={styles.utilizationAmount}>
+          {formatCompactCurrency(totalCurrentBalance, 'INR')}
+        </Text>
+        <Text style={styles.utilizationPercent}>
+          {((totalCurrentBalance / totalCreditLimit) * 100).toFixed(1)}% Utilization
+        </Text>
       </View>
     </View>
   );
 
-  const renderLoanCard = (loan: Loan) => {
-    const progress = calculateProgress(loan.principalAmount, loan.currentBalance);
-    const daysUntilPayment = Math.ceil(
-      (loan.nextPaymentDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24)
+  const renderCreditCardItem = (card: CreditCard) => {
+    const utilization = calculateUtilization(card.currentBalance, card.creditLimit);
+    const daysUntilDue = Math.ceil(
+      (card.paymentDueDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24)
     );
 
     return (
-      <TouchableOpacity key={loan.id} style={styles.loanCard}>
-        <View style={styles.loanHeader}>
-          <View style={styles.loanLeft}>
-            <View style={[styles.loanIcon, { backgroundColor: getLoanTypeColor(loan.type) }]}>
-              <MaterialIcons 
-                name={getLoanTypeIcon(loan.type) as any} 
-                size={24} 
-                color="#FFFFFF" 
-              />
-            </View>
-            <View style={styles.loanDetails}>
-              <Text style={styles.loanType}>
-                {loan.type.charAt(0).toUpperCase() + loan.type.slice(1)} Loan
-              </Text>
-              <Text style={styles.bankName}>{loan.bank}</Text>
-              <Text style={styles.accountNumber}>*{loan.accountNumber}</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.moreButton}>
-            <MaterialIcons name="more-vert" size={20} color="#666" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.balanceContainer}>
-          <View style={styles.balanceLeft}>
-            <Text style={styles.outstandingLabel}>Outstanding</Text>
-            <Text style={styles.outstandingAmount}>{formatCurrency(loan.currentBalance)}</Text>
-            <Text style={styles.principalAmount}>
-              of {formatCurrency(loan.principalAmount)}
-            </Text>
+      <View key={card.id} style={styles.cardContainer}>
+        <LinearGradient
+          colors={[getCardBrandColor(card.cardType), '#000000']}
+          style={styles.creditCard}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.cardHeader}>
+            <Text style={styles.bankName}>{card.bank}</Text>
+            <Text style={styles.cardBrand}>{getCardBrandName(card.cardType)}</Text>
           </View>
           
-          <View style={styles.balanceRight}>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBackground}>
+          <View style={styles.cardMiddle}>
+            <Text style={styles.cardNumber}>{card.cardNumber}</Text>
+            <Text style={styles.cardName}>{card.cardName}</Text>
+          </View>
+          
+          <View style={styles.cardFooter}>
+            <View>
+              <Text style={styles.cardLabel}>Available Credit</Text>
+              <Text style={styles.cardAmount}>
+                {formatCompactCurrency(card.availableCredit.amount, card.availableCredit.currency)}
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.cardMoreButton}>
+              <MaterialIcons name="more-horiz" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+        
+        <View style={styles.cardDetails}>
+          <View style={styles.utilizationContainer}>
+            <View style={styles.utilizationHeader}>
+              <Text style={styles.utilizationTitle}>Credit Utilization</Text>
+              <Text style={styles.utilizationValue}>{utilization.toFixed(1)}%</Text>
+            </View>
+            <View style={styles.utilizationBarContainer}>
+              <View style={styles.utilizationBarBackground}>
                 <View 
-                  style={[styles.progressBar, { width: `${progress}%` }]}
+                  style={[
+                    styles.utilizationBar, 
+                    { 
+                      width: `${utilization}%`,
+                      backgroundColor: getUtilizationColor(utilization)
+                    }
+                  ]}
                 />
               </View>
-              <Text style={styles.progressText}>{progress.toFixed(0)}% paid</Text>
             </View>
           </View>
-        </View>
-        
-        <View style={styles.loanFooter}>
-          <View style={styles.emiInfo}>
-            <MaterialIcons name="calendar-today" size={16} color="#666" />
-            <Text style={styles.emiText}>EMI: {formatCurrency(loan.emi)}</Text>
+          
+          <View style={styles.paymentInfo}>
+            <View style={styles.paymentRow}>
+              <View style={styles.paymentDetail}>
+                <Text style={styles.paymentLabel}>Outstanding</Text>
+                <Text style={styles.paymentAmount}>
+                  {formatCompactCurrency(card.currentBalance.amount, card.currentBalance.currency)}
+                </Text>
+              </View>
+              
+              <View style={styles.paymentDetail}>
+                <Text style={styles.paymentLabel}>Min Payment</Text>
+                <Text style={styles.paymentAmount}>
+                  {formatCompactCurrency(card.minimumPayment.amount, card.minimumPayment.currency)}
+                </Text>
+              </View>
+              
+              <View style={styles.paymentDetail}>
+                <Text style={styles.paymentLabel}>Due in</Text>
+                <Text style={[styles.paymentAmount, daysUntilDue <= 7 ? styles.dueSoon : {}]}>
+                  {daysUntilDue} days
+                </Text>
+              </View>
+            </View>
           </View>
           
-          <View style={styles.nextPayment}>
-            <MaterialIcons name="schedule" size={16} color="#E74C3C" />
-            <Text style={styles.nextPaymentText}>
-              Due in {daysUntilPayment} days
-            </Text>
-          </View>
+          {card.rewardProgram && (
+            <View style={styles.rewardInfo}>
+              <MaterialIcons name="card-giftcard" size={16} color="#F39C12" />
+              <Text style={styles.rewardText}>
+                {card.rewardProgram.currentBalance} {card.rewardProgram.type} earned
+              </Text>
+            </View>
+          )}
         </View>
-        
-        <View style={styles.interestInfo}>
-          <Text style={styles.interestRate}>Rate: {loan.interestRate}% p.a.</Text>
-          <Text style={styles.tenure}>
-            Tenure: {Math.floor(loan.tenure / 12)}Y {loan.tenure % 12}M
-          </Text>
-        </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -233,23 +313,23 @@ const LoansScreen: React.FC = () => {
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActionGrid}>
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="add" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>Add Loan</Text>
+          <MaterialIcons name="add-card" size={24} color="#8E44AD" />
+          <Text style={styles.actionText}>Add Card</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="payment" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>Pay EMI</Text>
+          <MaterialIcons name="payment" size={24} color="#8E44AD" />
+          <Text style={styles.actionText}>Pay Bill</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="description" size={24} color="#E74C3C" />
+          <MaterialIcons name="history" size={24} color="#8E44AD" />
           <Text style={styles.actionText}>Statements</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="calculate" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>EMI Calculator</Text>
+          <MaterialIcons name="card-giftcard" size={24} color="#8E44AD" />
+          <Text style={styles.actionText}>Rewards</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -257,16 +337,16 @@ const LoansScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor="#8E44AD" />
       {renderHeader()}
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {renderSummaryCards()}
         {renderQuickActions()}
         
-        <View style={styles.loansContainer}>
-          <Text style={styles.sectionTitle}>Your Loans</Text>
-          {loans.map(renderLoanCard)}
+        <View style={styles.cardsContainer}>
+          <Text style={styles.sectionTitle}>Your Credit Cards</Text>
+          {creditCards.map(renderCreditCardItem)}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -284,17 +364,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#8E44AD',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: '#7D3C98',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: '#FFFFFF',
   },
   addButton: {
-    backgroundColor: '#E74C3C',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 20,
     padding: 8,
   },
@@ -328,8 +408,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 4,
   },
-  emiCard: {
+  summarySubtext: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    opacity: 0.8,
+  },
+  utilizationCard: {
     backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
@@ -342,18 +428,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  emiLabel: {
+  utilizationLabel: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 8,
   },
-  emiAmount: {
+  utilizationAmount: {
     fontSize: 24,
     fontWeight: '700',
     color: '#E74C3C',
     marginBottom: 4,
   },
-  emiCount: {
+  utilizationPercent: {
     fontSize: 12,
     color: '#999999',
   },
@@ -394,14 +480,72 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  loansContainer: {
+  cardsContainer: {
     paddingHorizontal: 20,
   },
-  loanCard: {
+  cardContainer: {
+    marginBottom: 20,
+  },
+  creditCard: {
+    padding: 20,
+    borderRadius: 16,
+    minHeight: 180,
+    marginBottom: 8,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  bankName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  cardBrand: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  cardMiddle: {
+    marginBottom: 20,
+  },
+  cardNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  cardName: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    opacity: 0.8,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  cardLabel: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    opacity: 0.7,
+    marginBottom: 4,
+  },
+  cardAmount: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  cardMoreButton: {
+    padding: 4,
+  },
+  cardDetails: {
     backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 12,
-    marginBottom: 16,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: {
@@ -411,132 +555,75 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  loanHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  utilizationContainer: {
     marginBottom: 16,
   },
-  loanLeft: {
+  utilizationHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    flex: 1,
-  },
-  loanIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: 12,
+    marginBottom: 8,
   },
-  loanDetails: {
-    flex: 1,
-  },
-  loanType: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 2,
-  },
-  bankName: {
+  utilizationTitle: {
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 2,
-  },
-  accountNumber: {
-    fontSize: 12,
-    color: '#999999',
-  },
-  moreButton: {
-    padding: 4,
-  },
-  balanceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  balanceLeft: {
-    flex: 1,
-  },
-  outstandingLabel: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 4,
-  },
-  outstandingAmount: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#E74C3C',
-    marginBottom: 2,
-  },
-  principalAmount: {
-    fontSize: 12,
-    color: '#999999',
-  },
-  balanceRight: {
-    alignItems: 'flex-end',
-  },
-  progressContainer: {
-    alignItems: 'center',
-  },
-  progressBackground: {
-    width: 80,
-    height: 8,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#27AE60',
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 10,
-    color: '#666666',
-  },
-  loanFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  emiInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  emiText: {
-    fontSize: 12,
-    color: '#666666',
-    marginLeft: 4,
-  },
-  nextPayment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  nextPaymentText: {
-    fontSize: 12,
-    color: '#E74C3C',
-    marginLeft: 4,
+    color: '#333333',
     fontWeight: '500',
   },
-  interestInfo: {
+  utilizationValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#666666',
+  },
+  utilizationBarContainer: {
+    height: 6,
+  },
+  utilizationBarBackground: {
+    height: 6,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 3,
+  },
+  utilizationBar: {
+    height: 6,
+    borderRadius: 3,
+  },
+  paymentInfo: {
+    marginBottom: 12,
+  },
+  paymentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  interestRate: {
-    fontSize: 11,
-    color: '#999999',
+  paymentDetail: {
+    alignItems: 'center',
+    flex: 1,
   },
-  tenure: {
+  paymentLabel: {
     fontSize: 11,
     color: '#999999',
+    marginBottom: 4,
+  },
+  paymentAmount: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  dueSoon: {
+    color: '#E74C3C',
+  },
+  rewardInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8E1',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  rewardText: {
+    fontSize: 12,
+    color: '#E65100',
+    marginLeft: 6,
+    fontWeight: '500',
   },
 });
 
-export default LoansScreen;
+export default CreditCardsScreen;

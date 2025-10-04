@@ -1,4 +1,4 @@
-// src/app/(tabs)/loans.tsx
+// src/app/(tabs)/investments.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -16,120 +16,188 @@ import {
   Money, 
   RealEstateAsset 
 } from '../../types/finance';
+import { formatCompactCurrency } from '../../utils/currency';
 
-
-interface Loan {
-  id: string;
-  type: 'home' | 'personal' | 'car' | 'education' | 'gold';
-  bank: string;
-  accountNumber: string;
-  principalAmount: number;
-  currentBalance: number;
-  interestRate: number;
-  tenure: number; // months
-  emi: number;
-  nextPaymentDate: Date;
-  startDate: Date;
-  endDate: Date;
-  isActive: boolean;
-}
-
-const LoansScreen: React.FC = () => {
-  const [loans, setLoans] = useState<Loan[]>([
+const InvestmentsScreen: React.FC = () => {
+  const [investments, setInvestments] = useState<Investment[]>([
     {
       id: '1',
-      type: 'home',
-      bank: 'HDFC Bank',
-      accountNumber: '7845',
-      principalAmount: 5000000, // ₹50 lakhs
-      currentBalance: 3750000, // ₹37.5 lakhs remaining
-      interestRate: 8.5,
-      tenure: 240, // 20 years
-      emi: 43500,
-      nextPaymentDate: new Date('2025-11-01'),
-      startDate: new Date('2020-01-01'),
-      endDate: new Date('2040-01-01'),
+      type: 'mutual_funds',
+      name: 'SBI Blue Chip Fund',
+      description: 'Large Cap Equity Fund',
+      quantity: 2847.56,
+      unitPrice: { amount: 72.45, currency: 'INR' },
+      currentValue: { amount: 206325, currency: 'INR' },
+      investedAmount: { amount: 180000, currency: 'INR' },
+      broker: 'Zerodha',
+      folioNumber: 'SBI123456',
+      category: 'equity',
+      riskLevel: 'medium',
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2023-01-15'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '2',
-      type: 'car',
-      bank: 'ICICI Bank',
-      accountNumber: '2156',
-      principalAmount: 800000, // ₹8 lakhs
-      currentBalance: 350000, // ₹3.5 lakhs remaining
-      interestRate: 9.2,
-      tenure: 84, // 7 years
-      emi: 12800,
-      nextPaymentDate: new Date('2025-10-15'),
-      startDate: new Date('2022-03-01'),
-      endDate: new Date('2029-03-01'),
+      type: 'stocks',
+      name: 'Reliance Industries Ltd',
+      description: 'Equity Shares',
+      quantity: 50,
+      unitPrice: { amount: 2856.75, currency: 'INR' },
+      currentValue: { amount: 142837, currency: 'INR' },
+      investedAmount: { amount: 135000, currency: 'INR' },
+      broker: 'Zerodha',
+      isin: 'INE002A01018',
+      category: 'equity',
+      riskLevel: 'medium',
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2022-06-10'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '3',
-      type: 'personal',
-      bank: 'SBI',
-      accountNumber: '9834',
-      principalAmount: 300000, // ₹3 lakhs
-      currentBalance: 125000, // ₹1.25 lakhs remaining
-      interestRate: 11.5,
-      tenure: 36, // 3 years
-      emi: 10200,
-      nextPaymentDate: new Date('2025-10-20'),
-      startDate: new Date('2023-06-01'),
-      endDate: new Date('2026-06-01'),
+      type: 'fixed_deposit',
+      name: 'HDFC Bank FD',
+      description: '5-Year Fixed Deposit',
+      quantity: 1,
+      unitPrice: { amount: 250000, currency: 'INR' },
+      currentValue: { amount: 287500, currency: 'INR' },
+      investedAmount: { amount: 250000, currency: 'INR' },
+      maturityDate: new Date('2027-03-15'),
+      interestRate: 6.8,
+      broker: 'HDFC Bank',
+      category: 'debt',
+      riskLevel: 'low',
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2022-03-15'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
+    },
+    {
+      id: '4',
+      type: 'gold',
+      name: 'Digital Gold',
+      description: '24K Gold',
+      quantity: 15.5,
+      unitPrice: { amount: 6245, currency: 'INR' },
+      currentValue: { amount: 96798, currency: 'INR' },
+      investedAmount: { amount: 85000, currency: 'INR' },
+      weight: 15.5, // in grams
+      broker: 'Paytm Gold',
+      category: 'commodity',
+      riskLevel: 'medium',
+      isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2023-08-20'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
   ]);
 
-  const totalOutstanding = loans
-    .filter(loan => loan.isActive)
-    .reduce((sum, loan) => sum + loan.currentBalance, 0);
+  const totalCurrentValue = investments
+    .filter(inv => inv.isActive)
+    .reduce((sum, inv) => sum + inv.currentValue.amount, 0);
 
-  const totalEMI = loans
-    .filter(loan => loan.isActive)
-    .reduce((sum, loan) => sum + loan.emi, 0);
+  const totalInvestedAmount = investments
+    .filter(inv => inv.isActive)
+    .reduce((sum, inv) => sum + inv.investedAmount.amount, 0);
 
-  const formatCurrency = (amount: number) => {
-    if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(1)} Cr`;
-    } else if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)} L`;
-    } else {
-      return `₹${amount.toLocaleString('en-IN')}`;
-    }
-  };
+  const totalGains = totalCurrentValue - totalInvestedAmount;
+  const gainPercentage = totalInvestedAmount > 0 ? (totalGains / totalInvestedAmount) * 100 : 0;
 
-  const getLoanTypeIcon = (type: string) => {
+  const getInvestmentIcon = (type: string) => {
     const icons = {
-      home: 'home',
-      car: 'directions-car',
-      personal: 'person',
-      education: 'school',
-      gold: 'attach-money',
+      stocks: 'trending-up',
+      mutual_funds: 'pie-chart',
+      fixed_deposit: 'account-balance',
+      gold: 'star',
+      bonds: 'receipt',
+      ppf: 'security',
+      real_estate: 'home',
+      sip: 'schedule',
     };
-    return icons[type as keyof typeof icons] || 'account-balance-wallet';
+    return icons[type as keyof typeof icons] || 'attach-money';
   };
 
-  const getLoanTypeColor = (type: string) => {
+  const getInvestmentColor = (type: string) => {
     const colors = {
-      home: '#4CAF50',
-      car: '#2196F3',
-      personal: '#FF9800',
-      education: '#9C27B0',
+      stocks: '#2196F3',
+      mutual_funds: '#FF9800',
+      fixed_deposit: '#4CAF50',
       gold: '#FFD700',
+      bonds: '#9C27B0',
+      ppf: '#607D8B',
+      real_estate: '#795548',
+      sip: '#00BCD4',
     };
     return colors[type as keyof typeof colors] || '#666666';
   };
 
-  const calculateProgress = (principal: number, current: number) => {
-    return ((principal - current) / principal) * 100;
+  const getRiskColor = (risk: string) => {
+    const colors = {
+      low: '#4CAF50',
+      medium: '#FF9800',
+      high: '#F44336',
+    };
+    return colors[risk as keyof typeof colors] || '#666666';
   };
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>Loans</Text>
+      <Text style={styles.headerTitle}>Investments</Text>
       <TouchableOpacity style={styles.addButton}>
         <MaterialIcons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>
@@ -139,44 +207,57 @@ const LoansScreen: React.FC = () => {
   const renderSummaryCards = () => (
     <View style={styles.summaryContainer}>
       <LinearGradient
-        colors={['#E74C3C', '#C0392B']}
+        colors={['#FF6B35', '#FF8E35']}
         style={styles.summaryCard}
       >
-        <Text style={styles.summaryLabel}>Total Outstanding</Text>
-        <Text style={styles.summaryAmount}>{formatCurrency(totalOutstanding)}</Text>
+        <Text style={styles.summaryLabel}>Total Portfolio Value</Text>
+        <Text style={styles.summaryAmount}>
+          {formatCompactCurrency(totalCurrentValue, 'INR')}
+        </Text>
+        <Text style={styles.summarySubtext}>
+          Invested: {formatCompactCurrency(totalInvestedAmount, 'INR')}
+        </Text>
       </LinearGradient>
       
-      <View style={styles.emiCard}>
-        <Text style={styles.emiLabel}>Monthly EMI</Text>
-        <Text style={styles.emiAmount}>{formatCurrency(totalEMI)}</Text>
-        <Text style={styles.emiCount}>{loans.filter(l => l.isActive).length} Active Loans</Text>
+      <View style={[styles.gainsCard, totalGains >= 0 ? styles.gainPositive : styles.gainNegative]}>
+        <Text style={styles.gainsLabel}>Total {totalGains >= 0 ? 'Gains' : 'Loss'}</Text>
+        <Text style={styles.gainsAmount}>
+          {totalGains >= 0 ? '+' : ''}{formatCompactCurrency(totalGains, 'INR')}
+        </Text>
+        <Text style={styles.gainsPercent}>
+          {totalGains >= 0 ? '+' : ''}{gainPercentage.toFixed(2)}%
+        </Text>
       </View>
     </View>
   );
 
-  const renderLoanCard = (loan: Loan) => {
-    const progress = calculateProgress(loan.principalAmount, loan.currentBalance);
-    const daysUntilPayment = Math.ceil(
-      (loan.nextPaymentDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24)
-    );
+  const renderInvestmentCard = (investment: Investment) => {
+    const gains = investment.currentValue.amount - investment.investedAmount.amount;
+    const gainPercent = investment.investedAmount.amount > 0 ? 
+      (gains / investment.investedAmount.amount) * 100 : 0;
 
     return (
-      <TouchableOpacity key={loan.id} style={styles.loanCard}>
-        <View style={styles.loanHeader}>
-          <View style={styles.loanLeft}>
-            <View style={[styles.loanIcon, { backgroundColor: getLoanTypeColor(loan.type) }]}>
+      <TouchableOpacity key={investment.id} style={styles.investmentCard}>
+        <View style={styles.investmentHeader}>
+          <View style={styles.investmentLeft}>
+            <View style={[styles.investmentIcon, { backgroundColor: getInvestmentColor(investment.type) }]}>
               <MaterialIcons 
-                name={getLoanTypeIcon(loan.type) as any} 
+                name={getInvestmentIcon(investment.type) as any} 
                 size={24} 
                 color="#FFFFFF" 
               />
             </View>
-            <View style={styles.loanDetails}>
-              <Text style={styles.loanType}>
-                {loan.type.charAt(0).toUpperCase() + loan.type.slice(1)} Loan
-              </Text>
-              <Text style={styles.bankName}>{loan.bank}</Text>
-              <Text style={styles.accountNumber}>*{loan.accountNumber}</Text>
+            <View style={styles.investmentDetails}>
+              <Text style={styles.investmentName}>{investment.name}</Text>
+              <Text style={styles.investmentDescription}>{investment.description}</Text>
+              <View style={styles.investmentMeta}>
+                <View style={[styles.riskBadge, { backgroundColor: getRiskColor(investment.riskLevel) }]}>
+                  <Text style={styles.riskText}>{investment.riskLevel.toUpperCase()}</Text>
+                </View>
+                {investment.broker && (
+                  <Text style={styles.brokerText}>via {investment.broker}</Text>
+                )}
+              </View>
             </View>
           </View>
           <TouchableOpacity style={styles.moreButton}>
@@ -184,47 +265,62 @@ const LoansScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         
-        <View style={styles.balanceContainer}>
-          <View style={styles.balanceLeft}>
-            <Text style={styles.outstandingLabel}>Outstanding</Text>
-            <Text style={styles.outstandingAmount}>{formatCurrency(loan.currentBalance)}</Text>
-            <Text style={styles.principalAmount}>
-              of {formatCurrency(loan.principalAmount)}
-            </Text>
-          </View>
-          
-          <View style={styles.balanceRight}>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBackground}>
-                <View 
-                  style={[styles.progressBar, { width: `${progress}%` }]}
-                />
-              </View>
-              <Text style={styles.progressText}>{progress.toFixed(0)}% paid</Text>
+        <View style={styles.investmentValues}>
+          <View style={styles.valueRow}>
+            <View style={styles.valueItem}>
+              <Text style={styles.valueLabel}>Current Value</Text>
+              <Text style={styles.currentValue}>
+                {formatCompactCurrency(investment.currentValue.amount, investment.currentValue.currency)}
+              </Text>
+            </View>
+            
+            <View style={styles.valueItem}>
+              <Text style={styles.valueLabel}>Invested</Text>
+              <Text style={styles.investedValue}>
+                {formatCompactCurrency(investment.investedAmount.amount, investment.investedAmount.currency)}
+              </Text>
+            </View>
+            
+            <View style={styles.valueItem}>
+              <Text style={styles.valueLabel}>Returns</Text>
+              <Text style={[styles.returnsValue, gains >= 0 ? styles.positiveReturn : styles.negativeReturn]}>
+                {gains >= 0 ? '+' : ''}{gainPercent.toFixed(2)}%
+              </Text>
             </View>
           </View>
         </View>
         
-        <View style={styles.loanFooter}>
-          <View style={styles.emiInfo}>
-            <MaterialIcons name="calendar-today" size={16} color="#666" />
-            <Text style={styles.emiText}>EMI: {formatCurrency(loan.emi)}</Text>
-          </View>
-          
-          <View style={styles.nextPayment}>
-            <MaterialIcons name="schedule" size={16} color="#E74C3C" />
-            <Text style={styles.nextPaymentText}>
-              Due in {daysUntilPayment} days
+        {investment.type === 'stocks' && (
+          <View style={styles.additionalInfo}>
+            <Text style={styles.additionalText}>
+              {investment.quantity} shares @ ₹{investment.unitPrice.amount.toFixed(2)}
             </Text>
           </View>
-        </View>
+        )}
         
-        <View style={styles.interestInfo}>
-          <Text style={styles.interestRate}>Rate: {loan.interestRate}% p.a.</Text>
-          <Text style={styles.tenure}>
-            Tenure: {Math.floor(loan.tenure / 12)}Y {loan.tenure % 12}M
-          </Text>
-        </View>
+        {investment.type === 'mutual_funds' && (
+          <View style={styles.additionalInfo}>
+            <Text style={styles.additionalText}>
+              {investment.quantity.toFixed(2)} units @ ₹{investment.unitPrice.amount.toFixed(2)}
+            </Text>
+          </View>
+        )}
+        
+        {investment.type === 'fixed_deposit' && investment.maturityDate && (
+          <View style={styles.additionalInfo}>
+            <Text style={styles.additionalText}>
+              Matures on {investment.maturityDate.toLocaleDateString()} • {investment.interestRate}% p.a.
+            </Text>
+          </View>
+        )}
+        
+        {investment.type === 'gold' && investment.weight && (
+          <View style={styles.additionalInfo}>
+            <Text style={styles.additionalText}>
+              {investment.weight}g @ ₹{investment.unitPrice.amount.toFixed(0)}/g
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -234,23 +330,23 @@ const LoansScreen: React.FC = () => {
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActionGrid}>
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="add" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>Add Loan</Text>
+          <MaterialIcons name="add-circle" size={24} color="#FF6B35" />
+          <Text style={styles.actionText}>Add Investment</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="payment" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>Pay EMI</Text>
+          <MaterialIcons name="pie-chart" size={24} color="#FF6B35" />
+          <Text style={styles.actionText}>Portfolio</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="description" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>Statements</Text>
+          <MaterialIcons name="swap-horiz" size={24} color="#FF6B35" />
+          <Text style={styles.actionText}>Buy/Sell</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="calculate" size={24} color="#E74C3C" />
-          <Text style={styles.actionText}>EMI Calculator</Text>
+          <MaterialIcons name="assessment" size={24} color="#FF6B35" />
+          <Text style={styles.actionText}>Performance</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -265,9 +361,9 @@ const LoansScreen: React.FC = () => {
         {renderSummaryCards()}
         {renderQuickActions()}
         
-        <View style={styles.loansContainer}>
-          <Text style={styles.sectionTitle}>Your Loans</Text>
-          {loans.map(renderLoanCard)}
+        <View style={styles.investmentsContainer}>
+          <Text style={styles.sectionTitle}>Your Investments</Text>
+          {investments.map(renderInvestmentCard)}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -295,7 +391,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
   },
   addButton: {
-    backgroundColor: '#E74C3C',
+    backgroundColor: '#FF6B35',
     borderRadius: 20,
     padding: 8,
   },
@@ -329,8 +425,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 4,
   },
-  emiCard: {
+  summarySubtext: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    opacity: 0.8,
+  },
+  gainsCard: {
     backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 12,
@@ -343,20 +445,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  emiLabel: {
+  gainPositive: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#27AE60',
+  },
+  gainNegative: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#E74C3C',
+  },
+  gainsLabel: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 8,
   },
-  emiAmount: {
+  gainsAmount: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#E74C3C',
+    color: '#1A1A1A',
     marginBottom: 4,
   },
-  emiCount: {
+  gainsPercent: {
     fontSize: 12,
-    color: '#999999',
+    color: '#666666',
   },
   quickActionsContainer: {
     paddingHorizontal: 20,
@@ -395,10 +505,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  loansContainer: {
+  investmentsContainer: {
     paddingHorizontal: 20,
   },
-  loanCard: {
+  investmentCard: {
     backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 12,
@@ -412,18 +522,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  loanHeader: {
+  investmentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  loanLeft: {
+  investmentLeft: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     flex: 1,
   },
-  loanIcon: {
+  investmentIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -431,113 +541,89 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  loanDetails: {
+  investmentDetails: {
     flex: 1,
   },
-  loanType: {
+  investmentName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
     marginBottom: 2,
   },
-  bankName: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 2,
-  },
-  accountNumber: {
+  investmentDescription: {
     fontSize: 12,
+    color: '#666666',
+    marginBottom: 8,
+  },
+  investmentMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  riskBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  riskText: {
+    fontSize: 8,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  brokerText: {
+    fontSize: 10,
     color: '#999999',
+    fontStyle: 'italic',
   },
   moreButton: {
     padding: 4,
   },
-  balanceContainer: {
+  investmentValues: {
+    marginBottom: 12,
+  },
+  valueRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
   },
-  balanceLeft: {
+  valueItem: {
+    alignItems: 'center',
     flex: 1,
   },
-  outstandingLabel: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 4,
-  },
-  outstandingAmount: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#E74C3C',
-    marginBottom: 2,
-  },
-  principalAmount: {
-    fontSize: 12,
-    color: '#999999',
-  },
-  balanceRight: {
-    alignItems: 'flex-end',
-  },
-  progressContainer: {
-    alignItems: 'center',
-  },
-  progressBackground: {
-    width: 80,
-    height: 8,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#27AE60',
-    borderRadius: 4,
-  },
-  progressText: {
+  valueLabel: {
     fontSize: 10,
+    color: '#999999',
+    marginBottom: 4,
+  },
+  currentValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  investedValue: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#666666',
   },
-  loanFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingTop: 12,
+  returnsValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  positiveReturn: {
+    color: '#27AE60',
+  },
+  negativeReturn: {
+    color: '#E74C3C',
+  },
+  additionalInfo: {
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
-  emiInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  emiText: {
-    fontSize: 12,
+  additionalText: {
+    fontSize: 11,
     color: '#666666',
-    marginLeft: 4,
-  },
-  nextPayment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  nextPaymentText: {
-    fontSize: 12,
-    color: '#E74C3C',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
-  interestInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  interestRate: {
-    fontSize: 11,
-    color: '#999999',
-  },
-  tenure: {
-    fontSize: 11,
-    color: '#999999',
+    textAlign: 'center',
   },
 });
 
-export default LoansScreen;
+export default InvestmentsScreen;

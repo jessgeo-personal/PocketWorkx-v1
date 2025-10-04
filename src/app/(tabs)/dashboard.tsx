@@ -12,28 +12,11 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
-  Transaction, 
   NetWorthSummary, 
-  Money 
+  Money,
+  Transaction as FinanceTransaction,
 } from '../../types/finance';
-
-
-interface DashboardData {
-  netWorth: string;
-  liquidCash: string;
-  totalLiabilities: string;
-  investmentsReceivables: string;
-  userName: string;
-  userEmail: string;
-}
-
-interface Transaction {
-  id: string;
-  merchant: string;
-  date: string;
-  amount: string;
-  status: 'Success' | 'Pending' | 'Failed';
-}
+import { formatCompactCurrency } from '../../utils/currency';
 
 interface QuickAction {
   id: string;
@@ -42,30 +25,46 @@ interface QuickAction {
   onPress: () => void;
 }
 
+// Simple Transaction interface for UI display (not conflicting with enhanced one)
+interface DisplayTransaction {
+  id: string;
+  merchant: string;
+  date: string;
+  amount: Money;
+  status: 'Success' | 'Pending' | 'Failed';
+}
+
 const DashboardScreen: React.FC = () => {
-  // Mock data matching the mockup
-  const dashboardData: DashboardData = {
-    netWorth: '₹1,03,25,550',
-    liquidCash: '₹23,45,300',
-    totalLiabilities: '₹75,00,550',
-    investmentsReceivables: '₹1,78,32,550',
-    userName: 'Donna',
-    userEmail: 'hello@reallygreatsite.com'
+  // Using Money type for all amounts
+  const netWorthData: NetWorthSummary = {
+    totalAssets: { amount: 17832550, currency: 'INR' },
+    totalLiabilities: { amount: 7500550, currency: 'INR' },
+    netWorth: { amount: 10332000, currency: 'INR' },
+    liquidCash: { amount: 2345300, currency: 'INR' },
+    accountsBalance: { amount: 8650000, currency: 'INR' },
+    cryptoValue: { amount: 6016000, currency: 'INR' },
+    investmentsValue: { amount: 920250, currency: 'INR' },
+    realEstateValue: { amount: 0, currency: 'INR' },
+    receivablesValue: { amount: 0, currency: 'INR' },
+    totalDebt: { amount: 4225000, currency: 'INR' },
+    shortTermDebt: { amount: 125000, currency: 'INR' },
+    longTermDebt: { amount: 4100000, currency: 'INR' },
+    asOfDate: new Date(),
   };
 
-  const recentTransactions: Transaction[] = [
+  const recentTransactions: DisplayTransaction[] = [
     {
       id: '1',
       merchant: 'Borcelle Store',
       date: 'Friday, 10 September 2026',
-      amount: '$35.00',
+      amount: { amount: 3500, currency: 'INR' },
       status: 'Success'
     },
     {
       id: '2',
-      merchant: 'Timmerman Industries',
+      merchant: 'Timmerman Industries', 
       date: 'Saturday, 12 June 2026',
-      amount: '$65.00',
+      amount: { amount: 6500, currency: 'INR' },
       status: 'Success'
     }
   ];
@@ -106,8 +105,8 @@ const DashboardScreen: React.FC = () => {
   const renderWelcomeHeader = () => (
     <View style={styles.headerContainer}>
       <View>
-        <Text style={styles.welcomeText}>Welcome Back, {dashboardData.userName}</Text>
-        <Text style={styles.emailText}>{dashboardData.userEmail}</Text>
+        <Text style={styles.welcomeText}>Welcome Back, Donna</Text>
+        <Text style={styles.emailText}>hello@reallygreatsite.com</Text>
       </View>
       <TouchableOpacity style={styles.menuButton}>
         <MaterialIcons name="menu" size={24} color="#333" />
@@ -121,16 +120,20 @@ const DashboardScreen: React.FC = () => {
       style={styles.netWorthCard}
     >
       <Text style={styles.netWorthLabel}>Your total net worth</Text>
-      <Text style={styles.netWorthAmount}>{dashboardData.netWorth}</Text>
+      <Text style={styles.netWorthAmount}>
+        {formatCompactCurrency(netWorthData.netWorth.amount, netWorthData.netWorth.currency)}
+      </Text>
     </LinearGradient>
   );
 
   const renderFinancialSummary = () => (
     <View style={styles.summaryContainer}>
       <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, styles.halfCard]}>
           <Text style={styles.summaryLabel}>Your liquid cash balance</Text>
-          <Text style={styles.summaryAmount}>{dashboardData.liquidCash}</Text>
+          <Text style={styles.summaryAmount}>
+            {formatCompactCurrency(netWorthData.liquidCash.amount, netWorthData.liquidCash.currency)}
+          </Text>
         </View>
       </View>
       
@@ -138,14 +141,14 @@ const DashboardScreen: React.FC = () => {
         <View style={[styles.summaryCard, styles.halfCard]}>
           <Text style={styles.summaryLabel}>Your total liabilities</Text>
           <Text style={[styles.summaryAmount, styles.liabilityAmount]}>
-            {dashboardData.totalLiabilities}
+            {formatCompactCurrency(netWorthData.totalLiabilities.amount, netWorthData.totalLiabilities.currency)}
           </Text>
         </View>
         
         <View style={[styles.summaryCard, styles.halfCard]}>
           <Text style={styles.summaryLabel}>Your Investments & recievables</Text>
           <Text style={[styles.summaryAmount, styles.investmentAmount]}>
-            {dashboardData.investmentsReceivables}
+            {formatCompactCurrency(netWorthData.investmentsValue.amount, netWorthData.investmentsValue.currency)}
           </Text>
         </View>
       </View>
@@ -175,19 +178,21 @@ const DashboardScreen: React.FC = () => {
     </View>
   );
 
-  const renderTransactionItem = (transaction: Transaction) => (
-    <TouchableOpacity key={transaction.id} style={styles.transactionItem}>
+  const renderTransactionItem = (transaction: DisplayTransaction) => (
+    <View key={transaction.id} style={styles.transactionItem}>
       <View style={styles.transactionLeft}>
         <Text style={styles.transactionMerchant}>{transaction.merchant}</Text>
         <Text style={styles.transactionDate}>{transaction.date}</Text>
       </View>
       <View style={styles.transactionRight}>
-        <Text style={styles.transactionAmount}>{transaction.amount}</Text>
+        <Text style={styles.transactionAmount}>
+          {formatCompactCurrency(transaction.amount.amount, transaction.amount.currency)}
+        </Text>
         <View style={[styles.statusBadge, styles.successBadge]}>
           <Text style={styles.statusText}>{transaction.status}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderLatestTransactions = () => (
@@ -204,7 +209,7 @@ const DashboardScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView}>
         {renderWelcomeHeader()}
         {renderNetWorthCard()}
         {renderFinancialSummary()}

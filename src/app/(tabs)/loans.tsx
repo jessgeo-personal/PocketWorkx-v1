@@ -15,23 +15,7 @@ import {
   Loan, 
   Money 
 } from '../../types/finance';
-
-
-interface Loan {
-  id: string;
-  type: 'home' | 'personal' | 'car' | 'education' | 'gold';
-  bank: string;
-  accountNumber: string;
-  principalAmount: number;
-  currentBalance: number;
-  interestRate: number;
-  tenure: number; // months
-  emi: number;
-  nextPaymentDate: Date;
-  startDate: Date;
-  endDate: Date;
-  isActive: boolean;
-}
+import { formatCompactCurrency } from '../../utils/currency';
 
 const LoansScreen: React.FC = () => {
   const [loans, setLoans] = useState<Loan[]>([
@@ -40,65 +24,103 @@ const LoansScreen: React.FC = () => {
       type: 'home',
       bank: 'HDFC Bank',
       accountNumber: '7845',
-      principalAmount: 5000000, // ₹50 lakhs
-      currentBalance: 3750000, // ₹37.5 lakhs remaining
+      principalAmount: { amount: 5000000, currency: 'INR' }, // ₹50 lakhs
+      currentBalance: { amount: 3750000, currency: 'INR' }, // ₹37.5 lakhs remaining
       interestRate: 8.5,
       tenure: 240, // 20 years
-      emi: 43500,
+      emi: { amount: 43500, currency: 'INR' },
       nextPaymentDate: new Date('2025-11-01'),
       startDate: new Date('2020-01-01'),
       endDate: new Date('2040-01-01'),
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2020-01-01'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '2',
       type: 'car',
       bank: 'ICICI Bank',
       accountNumber: '2156',
-      principalAmount: 800000, // ₹8 lakhs
-      currentBalance: 350000, // ₹3.5 lakhs remaining
+      principalAmount: { amount: 800000, currency: 'INR' }, // ₹8 lakhs
+      currentBalance: { amount: 350000, currency: 'INR' }, // ₹3.5 lakhs remaining
       interestRate: 9.2,
       tenure: 84, // 7 years
-      emi: 12800,
+      emi: { amount: 12800, currency: 'INR' },
       nextPaymentDate: new Date('2025-10-15'),
       startDate: new Date('2022-03-01'),
       endDate: new Date('2029-03-01'),
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2022-03-01'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '3',
       type: 'personal',
       bank: 'SBI',
       accountNumber: '9834',
-      principalAmount: 300000, // ₹3 lakhs
-      currentBalance: 125000, // ₹1.25 lakhs remaining
+      principalAmount: { amount: 300000, currency: 'INR' }, // ₹3 lakhs
+      currentBalance: { amount: 125000, currency: 'INR' }, // ₹1.25 lakhs remaining
       interestRate: 11.5,
       tenure: 36, // 3 years
-      emi: 10200,
+      emi: { amount: 10200, currency: 'INR' },
       nextPaymentDate: new Date('2025-10-20'),
       startDate: new Date('2023-06-01'),
       endDate: new Date('2026-06-01'),
       isActive: true,
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2023-06-01'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
   ]);
 
   const totalOutstanding = loans
     .filter(loan => loan.isActive)
-    .reduce((sum, loan) => sum + loan.currentBalance, 0);
+    .reduce((sum, loan) => sum + loan.currentBalance.amount, 0);
 
   const totalEMI = loans
     .filter(loan => loan.isActive)
-    .reduce((sum, loan) => sum + loan.emi, 0);
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 10000000) {
-      return `₹${(amount / 10000000).toFixed(1)} Cr`;
-    } else if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)} L`;
-    } else {
-      return `₹${amount.toLocaleString('en-IN')}`;
-    }
-  };
+    .reduce((sum, loan) => sum + loan.emi.amount, 0);
 
   const getLoanTypeIcon = (type: string) => {
     const icons = {
@@ -122,8 +144,8 @@ const LoansScreen: React.FC = () => {
     return colors[type as keyof typeof colors] || '#666666';
   };
 
-  const calculateProgress = (principal: number, current: number) => {
-    return ((principal - current) / principal) * 100;
+  const calculateProgress = (principal: Money, current: Money) => {
+    return ((principal.amount - current.amount) / principal.amount) * 100;
   };
 
   const renderHeader = () => (
@@ -142,12 +164,16 @@ const LoansScreen: React.FC = () => {
         style={styles.summaryCard}
       >
         <Text style={styles.summaryLabel}>Total Outstanding</Text>
-        <Text style={styles.summaryAmount}>{formatCurrency(totalOutstanding)}</Text>
+        <Text style={styles.summaryAmount}>
+          {formatCompactCurrency(totalOutstanding, 'INR')}
+        </Text>
       </LinearGradient>
       
       <View style={styles.emiCard}>
         <Text style={styles.emiLabel}>Monthly EMI</Text>
-        <Text style={styles.emiAmount}>{formatCurrency(totalEMI)}</Text>
+        <Text style={styles.emiAmount}>
+          {formatCompactCurrency(totalEMI, 'INR')}
+        </Text>
         <Text style={styles.emiCount}>{loans.filter(l => l.isActive).length} Active Loans</Text>
       </View>
     </View>
@@ -186,9 +212,11 @@ const LoansScreen: React.FC = () => {
         <View style={styles.balanceContainer}>
           <View style={styles.balanceLeft}>
             <Text style={styles.outstandingLabel}>Outstanding</Text>
-            <Text style={styles.outstandingAmount}>{formatCurrency(loan.currentBalance)}</Text>
+            <Text style={styles.outstandingAmount}>
+              {formatCompactCurrency(loan.currentBalance.amount, loan.currentBalance.currency)}
+            </Text>
             <Text style={styles.principalAmount}>
-              of {formatCurrency(loan.principalAmount)}
+              of {formatCompactCurrency(loan.principalAmount.amount, loan.principalAmount.currency)}
             </Text>
           </View>
           
@@ -207,7 +235,9 @@ const LoansScreen: React.FC = () => {
         <View style={styles.loanFooter}>
           <View style={styles.emiInfo}>
             <MaterialIcons name="calendar-today" size={16} color="#666" />
-            <Text style={styles.emiText}>EMI: {formatCurrency(loan.emi)}</Text>
+            <Text style={styles.emiText}>
+              EMI: {formatCompactCurrency(loan.emi.amount, loan.emi.currency)}
+            </Text>
           </View>
           
           <View style={styles.nextPayment}>

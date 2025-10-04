@@ -1,5 +1,5 @@
-// src/app/(tabs)/dashboard.tsx
-import React from 'react';
+// src/app/(tabs)/cash.tsx
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,201 +19,366 @@ import {
   Money, 
   Currency 
 } from '../../types/finance';
+import { formatCompactCurrency } from '../../utils/currency';
 
-
-interface DashboardData {
-  netWorth: string;
-  liquidCash: string;
-  totalLiabilities: string;
-  investmentsReceivables: string;
-  userName: string;
-  userEmail: string;
-}
-
-interface Transaction {
-  id: string;
-  merchant: string;
-  date: string;
-  amount: string;
-  status: 'Success' | 'Pending' | 'Failed';
-}
-
-interface QuickAction {
-  id: string;
-  title: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-  onPress: () => void;
-}
-
-const DashboardScreen: React.FC = () => {
-  // Mock data matching the mockup
-  const dashboardData: DashboardData = {
-    netWorth: '₹1,03,25,550',
-    liquidCash: '₹23,45,300',
-    totalLiabilities: '₹75,00,550',
-    investmentsReceivables: '₹1,78,32,550',
-    userName: 'Donna',
-    userEmail: 'hello@reallygreatsite.com'
-  };
-
-  const recentTransactions: Transaction[] = [
+const CashScreen: React.FC = () => {
+  const [cashEntries, setCashEntries] = useState<CashEntry[]>([
     {
       id: '1',
-      merchant: 'Borcelle Store',
-      date: 'Friday, 10 September 2026',
-      amount: '$35.00',
-      status: 'Success'
+      description: 'Wallet Cash',
+      amount: { amount: 15500, currency: 'INR' },
+      location: 'Personal Wallet',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2025-10-01'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '2',
-      merchant: 'Timmerman Industries',
-      date: 'Saturday, 12 June 2026',
-      amount: '$65.00',
-      status: 'Success'
-    }
-  ];
-
-  const quickActions: QuickAction[] = [
-    {
-      id: '1',
-      title: 'Scan\nreceipts',
-      icon: 'qr-code-scanner',
-      onPress: () => console.log('Scan receipts')
-    },
-    {
-      id: '2',
-      title: 'Upload\nStatements',
-      icon: 'upload-file',
-      onPress: () => console.log('Upload statements')
+      description: 'Home Safe',
+      amount: { amount: 45000, currency: 'INR' },
+      location: 'Home - Bedroom Safe',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2025-09-15'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '3',
-      title: 'Scan SMS for\ntransactions',
-      icon: 'message',
-      onPress: () => console.log('Scan SMS')
+      description: 'Emergency Cash',
+      amount: { amount: 25000, currency: 'INR' },
+      location: 'Car Dashboard',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2025-08-20'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
     {
       id: '4',
-      title: 'Scan Emails for\ntransactions',
-      icon: 'email',
-      onPress: () => console.log('Scan emails')
+      description: 'Office Petty Cash',
+      amount: { amount: 8000, currency: 'INR' },
+      location: 'Office Desk',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date('2025-10-03'),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
     },
-    {
-      id: '5',
-      title: 'Add Cash',
-      icon: 'add-circle',
-      onPress: () => console.log('Add cash')
-    }
-  ];
+  ]);
 
-  const renderWelcomeHeader = () => (
-    <View style={styles.headerContainer}>
-      <View>
-        <Text style={styles.welcomeText}>Welcome Back, {dashboardData.userName}</Text>
-        <Text style={styles.emailText}>{dashboardData.userEmail}</Text>
-      </View>
-      <TouchableOpacity style={styles.menuButton}>
-        <MaterialIcons name="menu" size={24} color="#333" />
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [newCashDescription, setNewCashDescription] = useState('');
+  const [newCashAmount, setNewCashAmount] = useState('');
+  const [newCashLocation, setNewCashLocation] = useState('');
+
+  const totalCash = cashEntries.reduce((sum, entry) => sum + entry.amount.amount, 0);
+
+  const getLocationIcon = (location: string) => {
+    if (location?.toLowerCase().includes('wallet')) return 'account-balance-wallet';
+    if (location?.toLowerCase().includes('home')) return 'home';
+    if (location?.toLowerCase().includes('car')) return 'directions-car';
+    if (location?.toLowerCase().includes('office')) return 'work';
+    if (location?.toLowerCase().includes('safe')) return 'security';
+    return 'place';
+  };
+
+  const getLocationColor = (location: string) => {
+    if (location?.toLowerCase().includes('wallet')) return '#4CAF50';
+    if (location?.toLowerCase().includes('home')) return '#2196F3';
+    if (location?.toLowerCase().includes('car')) return '#FF9800';
+    if (location?.toLowerCase().includes('office')) return '#9C27B0';
+    if (location?.toLowerCase().includes('safe')) return '#795548';
+    return '#666666';
+  };
+
+  const handleAddCash = () => {
+    if (!newCashDescription.trim() || !newCashAmount.trim()) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    const amount = parseFloat(newCashAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
+    const newEntry: CashEntry = {
+      id: Date.now().toString(),
+      description: newCashDescription.trim(),
+      amount: { amount, currency: 'INR' },
+      location: newCashLocation.trim() || 'Not specified',
+      // Required enhanced fields
+      encryptedData: {
+        encryptionKey: '',
+        encryptionAlgorithm: 'AES-256',
+        lastEncrypted: new Date(),
+        isEncrypted: false,
+      },
+      auditTrail: {
+        createdBy: 'user',
+        createdAt: new Date(),
+        updatedBy: 'user',
+        updatedAt: new Date(),
+        version: 1,
+        changes: [],
+      },
+      linkedTransactions: [],
+    };
+
+    setCashEntries([...cashEntries, newEntry]);
+    setNewCashDescription('');
+    setNewCashAmount('');
+    setNewCashLocation('');
+    setIsAddModalVisible(false);
+  };
+
+  const handleDeleteCash = (id: string) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to remove this cash entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => {
+          setCashEntries(cashEntries.filter(entry => entry.id !== id));
+        }},
+      ]
+    );
+  };
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Physical Cash</Text>
+      <TouchableOpacity 
+        style={styles.addButton}
+        onPress={() => setIsAddModalVisible(true)}
+      >
+        <MaterialIcons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
 
-  const renderNetWorthCard = () => (
+  const renderTotalCard = () => (
     <LinearGradient
-      colors={['#4A90E2', '#357ABD']}
-      style={styles.netWorthCard}
+      colors={['#27AE60', '#2ECC71']}
+      style={styles.totalCard}
     >
-      <Text style={styles.netWorthLabel}>Your total net worth</Text>
-      <Text style={styles.netWorthAmount}>{dashboardData.netWorth}</Text>
+      <Text style={styles.totalLabel}>Total Physical Cash</Text>
+      <Text style={styles.totalAmount}>
+        {formatCompactCurrency(totalCash, 'INR')}
+      </Text>
+      <Text style={styles.entriesCount}>
+        {cashEntries.length} Cash {cashEntries.length === 1 ? 'Entry' : 'Entries'}
+      </Text>
     </LinearGradient>
   );
 
-  const renderFinancialSummary = () => (
-    <View style={styles.summaryContainer}>
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Your liquid cash balance</Text>
-          <Text style={styles.summaryAmount}>{dashboardData.liquidCash}</Text>
+  const renderCashEntry = (entry: CashEntry) => (
+    <TouchableOpacity key={entry.id} style={styles.cashCard}>
+      <View style={styles.cashHeader}>
+        <View style={styles.cashLeft}>
+          <View style={[styles.locationIcon, { backgroundColor: getLocationColor(entry.location || '') }]}>
+            <MaterialIcons 
+              name={getLocationIcon(entry.location || '') as any} 
+              size={24} 
+              color="#FFFFFF" 
+            />
+          </View>
+          <View style={styles.cashDetails}>
+            <Text style={styles.cashDescription}>{entry.description}</Text>
+            <Text style={styles.cashLocation}>{entry.location}</Text>
+            <Text style={styles.cashDate}>
+              Added on {entry.auditTrail.createdAt.toLocaleDateString()}
+            </Text>
+          </View>
         </View>
+        <TouchableOpacity 
+          style={styles.deleteButton}
+          onPress={() => handleDeleteCash(entry.id)}
+        >
+          <MaterialIcons name="delete" size={20} color="#E74C3C" />
+        </TouchableOpacity>
       </View>
       
-      <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, styles.halfCard]}>
-          <Text style={styles.summaryLabel}>Your total liabilities</Text>
-          <Text style={[styles.summaryAmount, styles.liabilityAmount]}>
-            {dashboardData.totalLiabilities}
-          </Text>
-        </View>
-        
-        <View style={[styles.summaryCard, styles.halfCard]}>
-          <Text style={styles.summaryLabel}>Your Investments & recievables</Text>
-          <Text style={[styles.summaryAmount, styles.investmentAmount]}>
-            {dashboardData.investmentsReceivables}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderQuickActions = () => (
-    <View style={styles.quickActionsContainer}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.quickActionsScroll}
-      >
-        {quickActions.map((action) => (
-          <TouchableOpacity
-            key={action.id}
-            style={styles.quickActionButton}
-            onPress={action.onPress}
-          >
-            <View style={styles.quickActionIcon}>
-              <MaterialIcons name={action.icon} size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.quickActionText}>{action.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
-
-  const renderTransactionItem = (transaction: Transaction) => (
-    <TouchableOpacity key={transaction.id} style={styles.transactionItem}>
-      <View style={styles.transactionLeft}>
-        <Text style={styles.transactionMerchant}>{transaction.merchant}</Text>
-        <Text style={styles.transactionDate}>{transaction.date}</Text>
-      </View>
-      <View style={styles.transactionRight}>
-        <Text style={styles.transactionAmount}>{transaction.amount}</Text>
-        <View style={[styles.statusBadge, styles.successBadge]}>
-          <Text style={styles.statusText}>{transaction.status}</Text>
-        </View>
+      <View style={styles.cashAmount}>
+        <Text style={styles.amountLabel}>Amount</Text>
+        <Text style={styles.amountValue}>
+          {formatCompactCurrency(entry.amount.amount, entry.amount.currency)}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderLatestTransactions = () => (
-    <View style={styles.transactionsContainer}>
-      <Text style={styles.sectionTitle}>Latest Transactions</Text>
-      {recentTransactions.map(renderTransactionItem)}
-      <TouchableOpacity style={styles.viewAllButton}>
-        <Text style={styles.viewAllText}>View All Transactions</Text>
-        <MaterialIcons name="arrow-forward" size={16} color="#4A90E2" />
-      </TouchableOpacity>
+  const renderQuickActions = () => (
+    <View style={styles.quickActionsContainer}>
+      <Text style={styles.sectionTitle}>Quick Actions</Text>
+      <View style={styles.quickActionGrid}>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => setIsAddModalVisible(true)}
+        >
+          <MaterialIcons name="add-circle" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Add Cash</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.actionButton}>
+          <MaterialIcons name="swap-horiz" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Move Cash</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.actionButton}>
+          <MaterialIcons name="receipt" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Record Expense</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.actionButton}>
+          <MaterialIcons name="account-balance" size={24} color="#27AE60" />
+          <Text style={styles.actionText}>Deposit to Bank</Text>
+        </TouchableOpacity>
+      </View>
     </View>
+  );
+
+  const renderAddCashModal = () => (
+    <Modal
+      visible={isAddModalVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setIsAddModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Cash Entry</Text>
+            <TouchableOpacity onPress={() => setIsAddModalVisible(false)}>
+              <MaterialIcons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalBody}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Description *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newCashDescription}
+                onChangeText={setNewCashDescription}
+                placeholder="e.g., Wallet Cash, Home Safe"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Amount (₹) *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newCashAmount}
+                onChangeText={setNewCashAmount}
+                placeholder="0"
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Location</Text>
+              <TextInput
+                style={styles.textInput}
+                value={newCashLocation}
+                onChangeText={setNewCashLocation}
+                placeholder="e.g., Personal Wallet, Home Safe"
+              />
+            </View>
+          </View>
+          
+          <View style={styles.modalFooter}>
+            <TouchableOpacity 
+              style={styles.cancelButton}
+              onPress={() => setIsAddModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.addCashButton}
+              onPress={handleAddCash}
+            >
+              <Text style={styles.addButtonText}>Add Cash</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      {renderHeader()}
+      
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderWelcomeHeader()}
-        {renderNetWorthCard()}
-        {renderFinancialSummary()}
+        {renderTotalCard()}
         {renderQuickActions()}
-        {renderLatestTransactions()}
+        
+        <View style={styles.cashContainer}>
+          <Text style={styles.sectionTitle}>Your Cash Entries</Text>
+          {cashEntries.length > 0 ? (
+            cashEntries.map(renderCashEntry)
+          ) : (
+            <View style={styles.emptyCash}>
+              <MaterialIcons name="account-balance-wallet" size={64} color="#E0E0E0" />
+              <Text style={styles.emptyText}>No cash entries yet</Text>
+              <Text style={styles.emptySubtext}>Add your first cash entry to get started</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
+      
+      {renderAddCashModal()}
     </SafeAreaView>
   );
 };
@@ -220,31 +388,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  scrollView: {
-    flex: 1,
-  },
-  headerContainer: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
-  welcomeText: {
-    fontSize: 20,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: '600',
     color: '#1A1A1A',
-    marginBottom: 2,
   },
-  emailText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  menuButton: {
+  addButton: {
+    backgroundColor: '#27AE60',
+    borderRadius: 20,
     padding: 8,
   },
-  netWorthCard: {
+  scrollView: {
+    flex: 1,
+  },
+  totalCard: {
     marginHorizontal: 20,
     marginVertical: 16,
     padding: 24,
@@ -258,169 +425,219 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
-  netWorthLabel: {
+  totalLabel: {
     fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
     marginBottom: 8,
   },
-  netWorthAmount: {
+  totalAmount: {
     fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 4,
   },
-  summaryContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  summaryCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  halfCard: {
-    flex: 1,
-    marginHorizontal: 6,
-  },
-  summaryLabel: {
+  entriesCount: {
     fontSize: 12,
-    color: '#666666',
-    marginBottom: 8,
-    lineHeight: 16,
-  },
-  summaryAmount: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  liabilityAmount: {
-    color: '#E74C3C',
-  },
-  investmentAmount: {
-    color: '#27AE60',
+    color: '#FFFFFF',
+    opacity: 0.8,
   },
   quickActionsContainer: {
-    marginBottom: 24,
-  },
-  quickActionsScroll: {
-    paddingHorizontal: 16,
-  },
-  quickActionButton: {
-    alignItems: 'center',
-    marginHorizontal: 8,
-    width: 80,
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  quickActionText: {
-    fontSize: 10,
-    color: '#333333',
-    textAlign: 'center',
-    lineHeight: 12,
-  },
-  transactionsContainer: {
-    marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingHorizontal: 20,
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1A1A1A',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  transactionItem: {
+  quickActionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    width: '47%',
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  actionText: {
+    fontSize: 12,
+    color: '#333333',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  cashContainer: {
+    paddingHorizontal: 20,
+  },
+  cashCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cashHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  transactionLeft: {
+  cashLeft: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     flex: 1,
   },
-  transactionMerchant: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1A1A1A',
-    marginBottom: 4,
+  locationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  transactionDate: {
-    fontSize: 12,
-    color: '#666666',
+  cashDetails: {
+    flex: 1,
   },
-  transactionRight: {
-    alignItems: 'flex-end',
-  },
-  transactionAmount: {
+  cashDescription: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
+    marginBottom: 2,
+  },
+  cashLocation: {
+    fontSize: 14,
+    color: '#666666',
     marginBottom: 4,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+  cashDate: {
+    fontSize: 12,
+    color: '#999999',
   },
-  successBadge: {
-    backgroundColor: '#E8F5E8',
+  deleteButton: {
+    padding: 4,
   },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '500',
+  cashAmount: {
+    alignItems: 'flex-end',
+  },
+  amountLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  amountValue: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#27AE60',
   },
-  viewAllButton: {
-    flexDirection: 'row',
+  emptyCash: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666666',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999999',
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 12,
-    marginTop: 8,
   },
-  viewAllText: {
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
     fontSize: 14,
-    color: '#4A90E2',
-    marginRight: 4,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333333',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 12,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#666666',
+  },
+  addCashButton: {
+    backgroundColor: '#27AE60',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 
-export default DashboardScreen;
+export default CashScreen;
