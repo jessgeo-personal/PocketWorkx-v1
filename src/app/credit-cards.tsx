@@ -14,8 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { 
   CreditCard, 
   Money 
-} from '../../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+} from '../types/finance';
+import { formatCompactCurrency } from '../utils/currency';
 
 const CreditCardsScreen: React.FC = () => {
   const [creditCards, setCreditCards] = useState<CreditCard[]>([

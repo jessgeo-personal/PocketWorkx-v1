@@ -16,7 +16,7 @@ import {
   Money,
   Transaction as FinanceTransaction,
 } from '../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+import { formatCompactCurrency } from '../utils/currency';
 import ScreenLayout from '../components/ScreenLayout'; //
 
 interface QuickAction {

@@ -14,8 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { 
   Loan, 
   Money 
-} from '../../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+} from '../types/finance';
+import { formatCompactCurrency } from '../utils/currency';
 
 const LoansScreen: React.FC = () => {
   const [loans, setLoans] = useState<Loan[]>([

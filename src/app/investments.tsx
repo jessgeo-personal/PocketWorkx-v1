@@ -15,8 +15,8 @@ import {
   Investment, 
   Money, 
   RealEstateAsset 
-} from '../../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+} from '../types/finance';
+import { formatCompactCurrency } from '../utils/currency';
 
 const InvestmentsScreen: React.FC = () => {
   const [investments, setInvestments] = useState<Investment[]>([

@@ -18,8 +18,8 @@ import {
   CashEntry, 
   Money, 
   Currency 
-} from '../../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+} from '../types/finance';
+import { formatCompactCurrency } from '../utils/currency';
 
 const CashScreen: React.FC = () => {
   const [cashEntries, setCashEntries] = useState<CashEntry[]>([

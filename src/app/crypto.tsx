@@ -14,8 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { 
   CryptoHolding, 
   Money 
-} from '../../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+} from '../types/finance';
+import { formatCompactCurrency } from '../utils/currency';
 
 const CryptoScreen: React.FC = () => {
   const [cryptoAssets, setCryptoAssets] = useState<CryptoHolding[]>([

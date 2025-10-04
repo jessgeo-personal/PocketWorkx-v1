@@ -14,8 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { 
   BankAccount, 
   Money 
-} from '../../types/finance';
-import { formatCompactCurrency } from '../../utils/currency';
+} from '../types/finance';
+import { formatCompactCurrency } from '../utils/currency';
 
 const AccountsScreen: React.FC = () => {
   const [accounts, setAccounts] = useState<BankAccount[]>([
