@@ -11,6 +11,12 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  Transaction, 
+  NetWorthSummary, 
+  Money 
+} from '../../types/finance';
+
 
 interface DashboardData {
   netWorth: string;

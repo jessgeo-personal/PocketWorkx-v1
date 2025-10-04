@@ -11,6 +11,12 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  Investment, 
+  Money, 
+  RealEstateAsset 
+} from '../../types/finance';
+
 
 interface Loan {
   id: string;

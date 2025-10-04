@@ -1,5 +1,5 @@
 // src/utils/currency.ts
-import { Currency, Money } from '@/types/finance';
+import { Currency, Money } from '../types/finance';
 
 export const SUPPORTED_CURRENCIES: Currency[] = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
