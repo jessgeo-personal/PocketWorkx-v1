@@ -15,8 +15,9 @@ import {
   NetWorthSummary, 
   Money,
   Transaction as FinanceTransaction,
-} from '../../types/finance';
+} from '../types/finance';
 import { formatCompactCurrency } from '../../utils/currency';
+import ScreenLayout from '../components/ScreenLayout'; //
 
 interface QuickAction {
   id: string;
