@@ -1,4 +1,4 @@
-// src/app/(tabs)/dashboard.tsx
+// src/app/dashboard.tsx - CORRECTED VERSION WITH SCREENLAYOUT
 import React from 'react';
 import {
   View,
@@ -17,7 +17,7 @@ import {
   Transaction as FinanceTransaction,
 } from '../types/finance';
 import { formatCompactCurrency } from '../utils/currency';
-import ScreenLayout from '../components/ScreenLayout'; //
+import ScreenLayout from '../components/ScreenLayout';
 
 interface QuickAction {
   id: string;
@@ -110,7 +110,7 @@ const DashboardScreen: React.FC = () => {
         <Text style={styles.emailText}>hello@reallygreatsite.com</Text>
       </View>
       <TouchableOpacity style={styles.menuButton}>
-        <MaterialIcons name="menu" size={24} color="#333" />
+        <MaterialIcons name="notifications" size={24} color="#666666" />
       </TouchableOpacity>
     </View>
   );
@@ -208,16 +208,18 @@ const DashboardScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <ScrollView style={styles.scrollView}>
-        {renderWelcomeHeader()}
-        {renderNetWorthCard()}
-        {renderFinancialSummary()}
-        {renderQuickActions()}
-        {renderLatestTransactions()}
-      </ScrollView>
-    </SafeAreaView>
+    <ScreenLayout>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <ScrollView style={styles.scrollView}>
+          {renderWelcomeHeader()}
+          {renderNetWorthCard()}
+          {renderFinancialSummary()}
+          {renderQuickActions()}
+          {renderLatestTransactions()}
+        </ScrollView>
+      </SafeAreaView>
+    </ScreenLayout>
   );
 };
 
@@ -364,7 +366,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    marginBottom: 24,
+    marginBottom: 100, // Extra space for floating button
   },
   sectionTitle: {
     fontSize: 18,
