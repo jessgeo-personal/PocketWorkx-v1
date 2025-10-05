@@ -8,7 +8,8 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { DocumentPicker } from '../services/FileProcessorService';
+import { FileProcessorService } from '../services/FileProcessorService';
+const fileService = new FileProcessorService();
 import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
 import ProcessingIndicator from './ProcessingIndicator';
 
@@ -32,7 +33,8 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
     setParsing(true);
     try {
       setProgress({ stage: 'uploading', progress: 50, currentStep: 'Selecting file', totalSteps: 4, currentStepIndex: 1 });
-      const res = await DocumentPicker.getDocumentAsync({ type: '*/*' });
+      const fileService = new (await import('../services/FileProcessorService')).FileProcessorService();
+      const res = await fileService.pickDocumentAsync();
       if (res.type !== 'success') throw new Error('Document selection cancelled');
       setProgress({ stage: 'parsing', progress: 75, currentStep: 'Parsing document', totalSteps: 4, currentStepIndex: 2 });
       // call parser service (to implement later)
