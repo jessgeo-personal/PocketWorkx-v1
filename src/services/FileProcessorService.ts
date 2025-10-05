@@ -1,62 +1,69 @@
-// src/services/FileProcessorService.ts - CORRECTED VERSION
+// src/services/FileProcessorService.ts - FIXED VERSION
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
-import * as XLSX from 'xlsx';
-import { Buffer } from 'buffer';
+import Xlsx from 'xlsx';
 import { ParsingConfig } from '../types/finance';
 
 export class FileProcessorService {
   async getFileInfo(fileUri: string): Promise<{ size: number; type: string; name: string }> {
-    try {
-      const info = await FileSystem.getInfoAsync(fileUri);
-      const name = fileUri.split('/').pop() || '';
-      return { size: info.size || 0, type: info.mimeType || '', name };
-    } catch (error) {
-      throw new Error(`Failed to get file info: ${error}`);
-    }
+    const info = await FileSystem.getInfoAsync(fileUri);
+    const name = fileUri.split('/').pop() || '';
+    return { size: info.size || 0, type: info.mimeType || '', name };
   }
 
   async readPDF(fileUri: string): Promise<string> {
-    try {
-      const b64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-      return b64;
-    } catch (error) {
-      throw new Error(`Failed to read PDF: ${error}`);
-    }
+    const b64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
+    return b64;
   }
 
   async readExcel(fileUri: string): Promise<string[]> {
-    try {
-      const b64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-      const buffer = Buffer.from(b64, 'base64');
-      const workbook = XLSX.read(buffer, { type: 'buffer' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
-      
-      return jsonData.map((row: any[]) => row.join('\t')); // Tab-separated for parsing
-    } catch (error) {
-      throw new Error(`Failed to read Excel: ${error}`);
-    }
+    const uri = FileSystem.documentDirectory + fileUri.split('/').pop();
+    await FileSystem.copyAsync({ from: fileUri, to: uri });
+    const buffer = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+    const workbook = new Xlsx.Workbook();
+    const buf = Buffer.from(buffer, 'base64');
+    await workbook.xlsx.load(buf);
+    const sheet = workbook.worksheets[0];
+    const rows: string[] = [];
+    sheet.eachRow((row) => {
+      rows.push(row.values.slice(1).join(' '));
+    });
+    return rows;
   }
 
   async readCSV(fileUri: string): Promise<string[]> {
-    try {
-      const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
-      return content.split('\n');
-    } catch (error) {
-      throw new Error(`Failed to read CSV: ${error}`);
-    }
+    const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+    return content.split('\n');
   }
 
-  async pickDocumentAsync(): Promise<DocumentPicker.DocumentResult> {
-    try {
-      return await DocumentPicker.getDocumentAsync({ 
-        type: ['application/pdf', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'],
-        copyToCacheDirectory: true 
-      });
-    } catch (error) {
-      throw new Error(`Failed to pick document: ${error}`);
+  // FIXED: Handle new DocumentPicker API format
+  async pickDocumentAsync(): Promise<{ type: string; uri: string; name?: string; size?: number }> {
+    const result = await DocumentPicker.getDocumentAsync({ 
+      type: '*/*', 
+      copyToCacheDirectory: false 
+    });
+
+    // Handle new API format
+    if (result.canceled) {
+      return { type: 'cancel', uri: '' };
     }
+
+    // New format has assets array
+    if (result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      return {
+        type: 'success',
+        uri: asset.uri,
+        name: asset.name,
+        size: asset.size
+      };
+    }
+
+    // Fallback for old format (if still used)
+    if ((result as any).type === 'success') {
+      return result as any;
+    }
+
+    return { type: 'cancel', uri: '' };
   }
 }
