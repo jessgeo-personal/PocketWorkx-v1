@@ -70,11 +70,11 @@ const DashboardScreen: React.FC = () => {
           {renderNetWorthCard()}
         </ScrollView>
       </SafeAreaView>
-      <DocumentUploadModal
+      <DocumentUploadModal>
         visible={isModalVisible}
         onClose={() => setModalVisible(false)}
         onParsed={handleParsed}
-      />
+      </DocumentUploadModal>
     </ScreenLayout>
   );
 };
