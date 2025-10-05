@@ -356,3 +356,139 @@ export interface FinancialGoal {
   encryptedData: EncryptedStorageMetadata;
   auditTrail: AuditTrail;
 }
+
+// Additional interfaces for PDF Statement Parser
+// Add these to the end of your existing src/types/finance.ts file
+
+// Document processing types
+export interface DocumentParsingOptions {
+  format: 'pdf' | 'excel' | 'csv';
+  bankName?: string;
+  accountType?: 'savings' | 'current' | 'credit';
+  dateFormat?: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+  ocrEnabled?: boolean;
+}
+
+export interface ParsedTransaction {
+  rawDate: string;
+  parsedDate: Date;
+  description: string;
+  debitAmount?: number;
+  creditAmount?: number;
+  balance: number;
+  referenceNumber?: string;
+  category?: string;
+  rawText: string; // Original text from document
+}
+
+export interface DocumentParsingResult {
+  success: boolean;
+  transactions: ParsedTransaction[];
+  metadata: {
+    fileName: string;
+    fileSize: number;
+    bankDetected?: string;
+    accountNumber?: string;
+    statementPeriod?: {
+      startDate: Date;
+      endDate: Date;
+    };
+    totalTransactions: number;
+  };
+  errors: ParseError[];
+  warnings: string[];
+}
+
+export interface ParseError {
+  line?: number;
+  column?: number;
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+  rawData?: string;
+}
+
+export interface BankStatementFormat {
+  bankName: string;
+  patterns: {
+    header: RegExp[];
+    transaction: RegExp[];
+    dateFormat: string;
+    amountFormat: RegExp;
+    balanceFormat: RegExp;
+  };
+  columns: {
+    date: number;
+    description: number;
+    debit?: number;
+    credit?: number;
+    balance: number;
+  };
+  skipLines: number;
+  identifier: RegExp;
+}
+
+export interface ProcessingProgress {
+  stage: 'uploading' | 'parsing' | 'extracting' | 'formatting' | 'complete' | 'error';
+  progress: number; // 0-100
+  currentStep: string;
+  totalSteps: number;
+  currentStepIndex: number;
+  estimatedTimeRemaining?: number; // seconds
+}
+
+export interface OCRResult {
+  text: string;
+  confidence: number;
+  boundingBoxes?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    text: string;
+  }[];
+}
+
+// Service interfaces
+export interface IStatementParserService {
+  parseDocument(fileUri: string, options: DocumentParsingOptions): Promise<DocumentParsingResult>;
+  detectBankFormat(content: string): Promise<BankStatementFormat | null>;
+  performOCR(imageUri: string): Promise<OCRResult>;
+  validateTransactions(transactions: ParsedTransaction[]): Promise<ParsedTransaction[]>;
+}
+
+export interface IFileProcessorService {
+  readPDF(fileUri: string): Promise<string>;
+  readExcel(fileUri: string): Promise<any[]>;
+  readCSV(fileUri: string): Promise<any[]>;
+  getFileInfo(fileUri: string): Promise<{ size: number; type: string; name: string }>;
+}
+
+// Supported Indian banks configuration
+export interface SupportedBank {
+  id: string;
+  name: string;
+  shortName: string;
+  formats: BankStatementFormat[];
+  commonPatterns: {
+    accountNumber: RegExp;
+    ifscCode: RegExp;
+    transactionId: RegExp;
+  };
+}
+
+// Parsing configuration
+export interface ParsingConfig {
+  supportedFormats: ('pdf' | 'csv' | 'xls' | 'xlsx')[];
+  maxFileSize: number; // bytes
+  maxTransactionsPerFile: number;
+  ocrSettings: {
+    enabled: boolean;
+    language: 'en' | 'hi';
+    confidence: number;
+  };
+  privacy: {
+    encryptProcessedData: boolean;
+    deleteOriginalAfterProcessing: boolean;
+    localProcessingOnly: boolean;
+  };
+}

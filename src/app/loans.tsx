@@ -104,7 +104,7 @@ const LoansScreen: React.FC = () => {
           {loans.map(renderLoanCard)}
         </ScrollView>
       </SafeAreaView>
-    </ScreenLayout>  {/* ← Added */}
+    </ScreenLayout>  
   );
 };
 

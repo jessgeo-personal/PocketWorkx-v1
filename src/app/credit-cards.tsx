@@ -105,7 +105,7 @@ const CreditCardsScreen: React.FC = () => {
           {cards.map(renderCard)}
         </ScrollView>
       </SafeAreaView>
-    </ScreenLayout>  {/* ← Added */}
+    </ScreenLayout>  
   );
 };
 

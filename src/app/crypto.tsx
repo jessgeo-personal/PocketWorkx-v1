@@ -254,7 +254,6 @@ const CryptoScreen: React.FC = () => {
         </ScrollView>
       </SafeAreaView>
     </ScreenLayout>  
-    {/* ← Added */}
   );
 };
 
