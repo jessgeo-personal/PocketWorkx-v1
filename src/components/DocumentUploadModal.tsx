@@ -58,12 +58,12 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
             {parsing ? (
               <ProcessingIndicator progress={progress} />
             ) : (
-              <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentPick}>
+              <TouchableOpacity style={styles.uploadButton} activeOpacity={0.8} onPress={handleDocumentPick}>
                 <Text style={styles.uploadText}>Select File</Text>
               </TouchableOpacity>
             )}
 
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} activeOpacity={0.8} onPress={onClose}>
             <Text style={styles.closeText}>Close</Text>
           </TouchableOpacity>
         </View>
