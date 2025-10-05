@@ -1,6 +1,4 @@
-// Add this temporary debug version to src/components/DocumentUploadModal.tsx
-// Replace your existing file with this debugging version
-
+// src/components/DocumentUploadModal.tsx - UPDATED WITH PASSWORD SUPPORT
 import React, { useState } from 'react';
 import {
   Modal,
@@ -8,9 +6,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import ProcessingIndicator from './ProcessingIndicator';
+import PasswordInputModal from './PasswordInputModal';
 import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
 import { StatementParserService } from '../services/StatementParserService';
 import { FileProcessorService } from '../services/FileProcessorService';
@@ -26,69 +24,126 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
     stage: 'uploading',
     progress: 0,
     currentStep: 'Waiting to start',
-    totalSteps: 4,
+    totalSteps: 5,
     currentStepIndex: 0,
   });
   const [parsing, setParsing] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordAttempt, setPasswordAttempt] = useState(1);
+  const [currentFileUri, setCurrentFileUri] = useState<string>('');
+  const [currentFileName, setCurrentFileName] = useState<string>('');
 
   const fileProcessor = new FileProcessorService();
   const parserService = new StatementParserService();
 
   const handleDocumentPick = async () => {
-    console.log('🔥 DocumentPick started!');
-    Alert.alert('Debug', 'DocumentPick started!');
-    
     setParsing(true);
-    setProgress({ stage: 'uploading', progress: 10, currentStep: 'Opening file picker', totalSteps: 4, currentStepIndex: 1 });
+    setProgress({ stage: 'uploading', progress: 10, currentStep: 'Opening file picker', totalSteps: 5, currentStepIndex: 1 });
     
     try {
-      console.log('🔥 Calling pickDocumentAsync...');
       const res = await fileProcessor.pickDocumentAsync();
-      console.log('🔥 Document picked:', res);
-      
       if (res.type !== 'success') {
         throw new Error('Document selection cancelled');
       }
 
-      Alert.alert('Debug', `File selected: ${res.name || 'Unknown'}`);
-      setProgress({ stage: 'uploading', progress: 30, currentStep: 'Reading file', totalSteps: 4, currentStepIndex: 2 });
+      setCurrentFileUri(res.uri);
+      setCurrentFileName(res.name || 'Unknown');
       
-      const options: DocumentParsingOptions = { format: 'pdf', ocrEnabled: true };
-      
-      setProgress({ stage: 'parsing', progress: 60, currentStep: 'Parsing document', totalSteps: 4, currentStepIndex: 3 });
-      console.log('🔥 Parsing document...');
-      const result = await parserService.parseDocument(res.uri, options);
-      console.log('🔥 Parse result:', result);
-
-      setProgress({ stage: 'complete', progress: 100, currentStep: 'Done', totalSteps: 4, currentStepIndex: 4 });
-      onParsed(result);
+      await processDocument(res.uri, res.name);
     } catch (e: any) {
-      console.error('🔥 Error:', e);
-      Alert.alert('Error', e.message);
-      setProgress({ stage: 'error', progress: 100, currentStep: e.message, totalSteps: 4, currentStepIndex: 4 });
-    } finally {
+      setProgress({ stage: 'error', progress: 100, currentStep: e.message, totalSteps: 5, currentStepIndex: 5 });
       setParsing(false);
     }
   };
 
+  const processDocument = async (fileUri: string, fileName?: string, password?: string) => {
+    try {
+      setProgress({ stage: 'uploading', progress: 30, currentStep: 'Reading file', totalSteps: 5, currentStepIndex: 2 });
+      
+      const options: DocumentParsingOptions = { format: 'pdf', ocrEnabled: true };
+      
+      setProgress({ stage: 'parsing', progress: 50, currentStep: 'Checking for password protection', totalSteps: 5, currentStepIndex: 3 });
+      
+      const result = await parserService.parseDocumentWithPassword(fileUri, options, password);
+      
+      // Check if password is required
+      if (!result.success && result.errors.some(e => e.message.includes('Password required'))) {
+        console.log('🔐 Password required, showing password modal');
+        setShowPasswordModal(true);
+        return; // Don't finish parsing, wait for password
+      }
+      
+      // Check if password was incorrect
+      if (!result.success && result.errors.some(e => e.message.includes('Incorrect password'))) {
+        console.log('🔐 Incorrect password, showing modal again');
+        setPasswordAttempt(prev => prev + 1);
+        setShowPasswordModal(true);
+        return; // Don't finish parsing, wait for correct password
+      }
+
+      setProgress({ stage: 'parsing', progress: 80, currentStep: 'Extracting transactions', totalSteps: 5, currentStepIndex: 4 });
+      setProgress({ stage: 'complete', progress: 100, currentStep: 'Done', totalSteps: 5, currentStepIndex: 5 });
+      
+      onParsed(result);
+      setParsing(false);
+    } catch (e: any) {
+      console.error('🔐 Document processing error:', e);
+      setProgress({ stage: 'error', progress: 100, currentStep: e.message, totalSteps: 5, currentStepIndex: 5 });
+      setParsing(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (password: string) => {
+    setShowPasswordModal(false);
+    setProgress({ stage: 'parsing', progress: 60, currentStep: 'Unlocking PDF with password', totalSteps: 5, currentStepIndex: 3 });
+    
+    await processDocument(currentFileUri, currentFileName, password);
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordModal(false);
+    setPasswordAttempt(1);
+    setParsing(false);
+    setProgress({ stage: 'uploading', progress: 0, currentStep: 'Cancelled', totalSteps: 5, currentStepIndex: 0 });
+  };
+
+  const handleClose = () => {
+    setShowPasswordModal(false);
+    setPasswordAttempt(1);
+    setParsing(false);
+    setCurrentFileUri('');
+    setCurrentFileName('');
+    onClose();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>Upload Statement</Text>
-          {parsing ? (
-            <ProcessingIndicator progress={progress} />
-          ) : (
-            <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentPick}>
-              <Text style={styles.uploadText}>Select File</Text>
+    <>
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.title}>Upload Statement</Text>
+            {parsing ? (
+              <ProcessingIndicator progress={progress} />
+            ) : (
+              <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentPick}>
+                <Text style={styles.uploadText}>Select File</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <Text style={styles.closeText}>Close</Text>
             </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>Close</Text>
-          </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      <PasswordInputModal
+        visible={showPasswordModal}
+        onSubmit={handlePasswordSubmit}
+        onCancel={handlePasswordCancel}
+        fileName={currentFileName}
+        attempt={passwordAttempt}
+      />
+    </>
   );
 };
 
