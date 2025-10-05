@@ -1,4 +1,4 @@
-// src/services/FileProcessorService.ts - FIXED VERSION
+// src/services/FileProcessorService.ts - FIXED VERSION with new FileSystem API
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import Xlsx from 'xlsx';
@@ -6,37 +6,99 @@ import { ParsingConfig } from '../types/finance';
 
 export class FileProcessorService {
   async getFileInfo(fileUri: string): Promise<{ size: number; type: string; name: string }> {
-    const info = await FileSystem.getInfoAsync(fileUri);
-    const name = fileUri.split('/').pop() || '';
-    return { size: info.size || 0, type: info.mimeType || '', name };
+    try {
+      // Use new FileSystem API
+      const info = await FileSystem.getInfoAsync(fileUri);
+      const name = fileUri.split('/').pop() || '';
+      return { size: info.size || 0, type: info.mimeType || '', name };
+    } catch (error) {
+      console.warn('FileSystem getInfoAsync failed, using fallback:', error);
+      // Fallback for content:// URIs
+      const name = fileUri.split('/').pop() || 'unknown';
+      return { size: 0, type: 'application/pdf', name };
+    }
   }
 
   async readPDF(fileUri: string): Promise<string> {
-    const b64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-    return b64;
+    try {
+      // For content:// URIs, we need to copy to cache first
+      if (fileUri.startsWith('content://')) {
+        const fileName = `temp_${Date.now()}.pdf`;
+        const localUri = FileSystem.documentDirectory + fileName;
+        await FileSystem.copyAsync({ from: fileUri, to: localUri });
+        const b64 = await FileSystem.readAsStringAsync(localUri, { 
+          encoding: FileSystem.EncodingType.Base64 
+        });
+        // Clean up temp file
+        await FileSystem.deleteAsync(localUri, { idempotent: true });
+        return b64;
+      } else {
+        const b64 = await FileSystem.readAsStringAsync(fileUri, { 
+          encoding: FileSystem.EncodingType.Base64 
+        });
+        return b64;
+      }
+    } catch (error) {
+      throw new Error(`Failed to read PDF: ${error}`);
+    }
   }
 
   async readExcel(fileUri: string): Promise<string[]> {
-    const uri = FileSystem.documentDirectory + fileUri.split('/').pop();
-    await FileSystem.copyAsync({ from: fileUri, to: uri });
-    const buffer = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-    const workbook = new Xlsx.Workbook();
-    const buf = Buffer.from(buffer, 'base64');
-    await workbook.xlsx.load(buf);
-    const sheet = workbook.worksheets[0];
-    const rows: string[] = [];
-    sheet.eachRow((row) => {
-      rows.push(row.values.slice(1).join(' '));
-    });
-    return rows;
+    try {
+      let workingUri = fileUri;
+      
+      // For content:// URIs, copy to cache first
+      if (fileUri.startsWith('content://')) {
+        const fileName = `temp_${Date.now()}.xlsx`;
+        workingUri = FileSystem.documentDirectory + fileName;
+        await FileSystem.copyAsync({ from: fileUri, to: workingUri });
+      }
+
+      const buffer = await FileSystem.readAsStringAsync(workingUri, { 
+        encoding: FileSystem.EncodingType.Base64 
+      });
+      const workbook = Xlsx.read(buffer, { type: 'base64' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = Xlsx.utils.sheet_to_json(sheet, { header: 1, raw: false });
+      
+      // Clean up temp file if we created one
+      if (fileUri.startsWith('content://')) {
+        await FileSystem.deleteAsync(workingUri, { idempotent: true });
+      }
+      
+      return rows.map(row => Array.isArray(row) ? row.join(' ') : String(row));
+    } catch (error) {
+      throw new Error(`Failed to read Excel: ${error}`);
+    }
   }
 
   async readCSV(fileUri: string): Promise<string[]> {
-    const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
-    return content.split('\n');
+    try {
+      let workingUri = fileUri;
+      
+      // For content:// URIs, copy to cache first
+      if (fileUri.startsWith('content://')) {
+        const fileName = `temp_${Date.now()}.csv`;
+        workingUri = FileSystem.documentDirectory + fileName;
+        await FileSystem.copyAsync({ from: fileUri, to: workingUri });
+      }
+
+      const content = await FileSystem.readAsStringAsync(workingUri, { 
+        encoding: FileSystem.EncodingType.UTF8 
+      });
+      
+      // Clean up temp file if we created one
+      if (fileUri.startsWith('content://')) {
+        await FileSystem.deleteAsync(workingUri, { idempotent: true });
+      }
+      
+      return content.split('\n');
+    } catch (error) {
+      throw new Error(`Failed to read CSV: ${error}`);
+    }
   }
 
-  // FIXED: Handle new DocumentPicker API format
   async pickDocumentAsync(): Promise<{ type: string; uri: string; name?: string; size?: number }> {
     const result = await DocumentPicker.getDocumentAsync({ 
       type: '*/*', 

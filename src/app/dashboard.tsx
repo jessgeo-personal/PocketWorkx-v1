@@ -1,4 +1,4 @@
-// src/app/dashboard.tsx
+// Quick fix for src/app/dashboard.tsx - ensure props are passed correctly
 import React, { useState } from 'react';
 import {
   View,
@@ -21,10 +21,12 @@ const DashboardScreen: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [parsedResult, setParsedResult] = useState<DocumentParsingResult | null>(null);
 
+  // ENSURE this function exists and is properly typed
   const handleParsed = (result: DocumentParsingResult) => {
+    console.log('📄 Received parsed result:', result);
     setParsedResult(result);
     setModalVisible(false);
-    console.log('Parsed transactions:', result.transactions);
+    // Show success message or navigate to results
   };
 
   const netWorthData: NetWorthSummary = {
@@ -70,11 +72,11 @@ const DashboardScreen: React.FC = () => {
           {renderNetWorthCard()}
         </ScrollView>
       </SafeAreaView>
-      <DocumentUploadModal>
+      <DocumentUploadModal
         visible={isModalVisible}
         onClose={() => setModalVisible(false)}
         onParsed={handleParsed}
-      </DocumentUploadModal>
+      />
     </ScreenLayout>
   );
 };
