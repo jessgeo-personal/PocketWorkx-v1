@@ -6,12 +6,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
-import { FileProcessorService } from '../services/FileProcessorService';
-const fileService = new FileProcessorService();
-import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
 import ProcessingIndicator from './ProcessingIndicator';
+import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
+import { StatementParserService } from '../services/StatementParserService';
+import { FileProcessorService } from '../services/FileProcessorService';
 
 interface DocumentUploadModalProps {
   visible: boolean;
@@ -23,24 +22,30 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
   const [progress, setProgress] = useState<ProcessingProgress>({
     stage: 'uploading',
     progress: 0,
-    currentStep: '',
-    totalSteps: 1,
+    currentStep: 'Waiting to start',
+    totalSteps: 4,
     currentStepIndex: 0,
   });
   const [parsing, setParsing] = useState(false);
 
+  const fileProcessor = new FileProcessorService();
+  const parserService = new StatementParserService();
+
   const handleDocumentPick = async () => {
     setParsing(true);
+    setProgress({ stage: 'uploading', progress: 10, currentStep: 'Opening file picker', totalSteps: 4, currentStepIndex: 1 });
     try {
-      setProgress({ stage: 'uploading', progress: 50, currentStep: 'Selecting file', totalSteps: 4, currentStepIndex: 1 });
-      const fileService = new (await import('../services/FileProcessorService')).FileProcessorService();
-      const res = await fileService.pickDocumentAsync();
-      if (res.type !== 'success') throw new Error('Document selection cancelled');
-      setProgress({ stage: 'parsing', progress: 75, currentStep: 'Parsing document', totalSteps: 4, currentStepIndex: 2 });
-      // call parser service (to implement later)
+      const res = await fileProcessor.pickDocumentAsync();
+      if (res.type !== 'success') {
+        throw new Error('Document selection cancelled');
+      }
+
+      setProgress({ stage: 'uploading', progress: 30, currentStep: 'Reading file', totalSteps: 4, currentStepIndex: 2 });
       const options: DocumentParsingOptions = { format: 'pdf', ocrEnabled: true };
-      const parser = new (await import('../services/StatementParserService')).StatementParserService();
-      const result = await parser.parseDocument(res.uri, options);
+      
+      setProgress({ stage: 'parsing', progress: 60, currentStep: 'Parsing document', totalSteps: 4, currentStepIndex: 3 });
+      const result = await parserService.parseDocument(res.uri, options);
+
       setProgress({ stage: 'complete', progress: 100, currentStep: 'Done', totalSteps: 4, currentStepIndex: 4 });
       onParsed(result);
     } catch (e: any) {
@@ -55,15 +60,14 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Upload Statement</Text>
-            {parsing ? (
-              <ProcessingIndicator progress={progress} />
-            ) : (
-              <TouchableOpacity style={styles.uploadButton} activeOpacity={0.8} onPress={handleDocumentPick}>
-                <Text style={styles.uploadText}>Select File</Text>
-              </TouchableOpacity>
-            )}
-
-          <TouchableOpacity style={styles.closeButton} activeOpacity={0.8} onPress={onClose}>
+          {parsing ? (
+            <ProcessingIndicator progress={progress} />
+          ) : (
+            <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentPick}>
+              <Text style={styles.uploadText}>Select File</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -78,10 +82,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '600', marginBottom: 16 },
   uploadButton: { backgroundColor: '#357ABD', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8 },
   uploadText: { color: '#FFFFFF', fontSize: 16 },
-  progressContainer: { alignItems: 'center' },
-  progressText: { marginTop: 12, fontSize: 14, color: '#333333' },
   closeButton: { marginTop: 20 },
-  closeText: { color: '#357ABD', fontSize: 16 }
+  closeText: { color: '#357ABD', fontSize: 16 },
 });
 
 export default DocumentUploadModal;
