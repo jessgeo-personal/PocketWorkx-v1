@@ -4,6 +4,7 @@
     "target": "esnext",
     "module": "esnext",
     "jsx": "react-native",
+    "allowJs": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,

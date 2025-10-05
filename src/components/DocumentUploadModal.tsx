@@ -52,7 +52,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>Upload Statement</n</Text>
+          <Text style={styles.title}>Upload Statement</Text>
             {parsing ? (
               <ProcessingIndicator progress={progress} />
             ) : (
