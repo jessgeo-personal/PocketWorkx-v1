@@ -1,13 +1,13 @@
-// src/services/FileProcessorService.ts - FIXED VERSION with new FileSystem API
+// src/services/FileProcessorService.ts - FIXED VERSION with legacy FileSystem API
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy'; // Use legacy API
 import Xlsx from 'xlsx';
 import { ParsingConfig } from '../types/finance';
 
 export class FileProcessorService {
   async getFileInfo(fileUri: string): Promise<{ size: number; type: string; name: string }> {
     try {
-      // Use new FileSystem API
+      // Use legacy FileSystem API
       const info = await FileSystem.getInfoAsync(fileUri);
       const name = fileUri.split('/').pop() || '';
       return { size: info.size || 0, type: info.mimeType || '', name };
@@ -21,14 +21,22 @@ export class FileProcessorService {
 
   async readPDF(fileUri: string): Promise<string> {
     try {
+      console.log('📄 Reading PDF from URI:', fileUri);
+      
       // For content:// URIs, we need to copy to cache first
       if (fileUri.startsWith('content://')) {
         const fileName = `temp_${Date.now()}.pdf`;
         const localUri = FileSystem.documentDirectory + fileName;
+        
+        console.log('📄 Copying from content:// to local:', localUri);
         await FileSystem.copyAsync({ from: fileUri, to: localUri });
+        
         const b64 = await FileSystem.readAsStringAsync(localUri, { 
           encoding: FileSystem.EncodingType.Base64 
         });
+        
+        console.log('📄 PDF read successfully, base64 length:', b64.length);
+        
         // Clean up temp file
         await FileSystem.deleteAsync(localUri, { idempotent: true });
         return b64;
@@ -39,6 +47,7 @@ export class FileProcessorService {
         return b64;
       }
     } catch (error) {
+      console.error('📄 PDF read failed:', error);
       throw new Error(`Failed to read PDF: ${error}`);
     }
   }
