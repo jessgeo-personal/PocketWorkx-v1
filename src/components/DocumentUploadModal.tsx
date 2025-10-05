@@ -35,7 +35,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
     setParsing(true);
     setProgress({ stage: 'uploading', progress: 10, currentStep: 'Opening file picker', totalSteps: 4, currentStepIndex: 1 });
     try {
-      const res = await fileProcessor.pickDocumentAsync();
+      const res = await new FileProcessorService().pickDocumentAsync();
       if (res.type !== 'success') {
         throw new Error('Document selection cancelled');
       }
@@ -71,7 +71,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
             <Text style={styles.closeText}>Close</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </View> 
     </Modal>
   );
 };
