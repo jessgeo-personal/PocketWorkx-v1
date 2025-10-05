@@ -48,6 +48,12 @@ export class StatementParserService {
         return result;
       }
 
+      const rawLines = Array.isArray(rawContent) ? rawContent : rawContent.split('\n');
+      const { transactions, errors: parseErrors } = extractTransactions(rawLines, format);
+      result.transactions = transactions;
+      result.errors.push(...parseErrors);
+      result.metadata.totalTransactions = transactions.length;
+
       // Parse transactions
       // (Implement parse logic later)
       result.success = true;
