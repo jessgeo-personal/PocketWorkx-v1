@@ -1,4 +1,6 @@
-// src/components/DocumentUploadModal.tsx
+// Add this temporary debug version to src/components/DocumentUploadModal.tsx
+// Replace your existing file with this debugging version
+
 import React, { useState } from 'react';
 import {
   Modal,
@@ -6,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import ProcessingIndicator from './ProcessingIndicator';
 import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
@@ -32,23 +35,36 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
   const parserService = new StatementParserService();
 
   const handleDocumentPick = async () => {
+    console.log('🔥 DocumentPick started!');
+    Alert.alert('Debug', 'DocumentPick started!');
+    
     setParsing(true);
     setProgress({ stage: 'uploading', progress: 10, currentStep: 'Opening file picker', totalSteps: 4, currentStepIndex: 1 });
+    
     try {
-      const res = await new FileProcessorService().pickDocumentAsync();
+      console.log('🔥 Calling pickDocumentAsync...');
+      const res = await fileProcessor.pickDocumentAsync();
+      console.log('🔥 Document picked:', res);
+      
       if (res.type !== 'success') {
         throw new Error('Document selection cancelled');
       }
 
+      Alert.alert('Debug', `File selected: ${res.name || 'Unknown'}`);
       setProgress({ stage: 'uploading', progress: 30, currentStep: 'Reading file', totalSteps: 4, currentStepIndex: 2 });
+      
       const options: DocumentParsingOptions = { format: 'pdf', ocrEnabled: true };
       
       setProgress({ stage: 'parsing', progress: 60, currentStep: 'Parsing document', totalSteps: 4, currentStepIndex: 3 });
+      console.log('🔥 Parsing document...');
       const result = await parserService.parseDocument(res.uri, options);
+      console.log('🔥 Parse result:', result);
 
       setProgress({ stage: 'complete', progress: 100, currentStep: 'Done', totalSteps: 4, currentStepIndex: 4 });
       onParsed(result);
     } catch (e: any) {
+      console.error('🔥 Error:', e);
+      Alert.alert('Error', e.message);
       setProgress({ stage: 'error', progress: 100, currentStep: e.message, totalSteps: 4, currentStepIndex: 4 });
     } finally {
       setParsing(false);
@@ -71,7 +87,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
             <Text style={styles.closeText}>Close</Text>
           </TouchableOpacity>
         </View>
-      </View> 
+      </View>
     </Modal>
   );
 };
