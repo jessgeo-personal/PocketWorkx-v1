@@ -51,7 +51,7 @@ const DashboardScreen: React.FC = () => {
   const renderWelcomeHeader = () => (
     <View style={styles.headerContainer}>
       <Image
-        source={require('../assets/logo.png')}
+        source={logo}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
     width: 120,          // adjust to fit your header height
     height: 40,          // keeps aspect ratio
     marginBottom: 8,     // space below logo
+    backgroundColor: 'red'   // temporary debug color
   },
   menuButton: { padding: 8 },
   netWorthCard: {
