@@ -25,7 +25,6 @@ export default function RootLayout() {
       <Stack.Screen name="analytics" />
       <Stack.Screen name="cashflow" />
       <Stack.Screen name="trends" />
-      <Stack.Screen name="menu" />
       <Stack.Screen name="investments-receivables" />
     </Stack>
   );

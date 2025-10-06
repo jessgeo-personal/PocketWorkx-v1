@@ -70,7 +70,7 @@ const SlidingMenu: React.FC<SlidingMenuProps> = ({ visible, onClose }) => {
     {
       title: 'Quick Actions',
       items: [
-        { id: '10', title: 'Menu', route: '/menu', icon: 'menu', color: '#607D8B' },
+        //{ id: '10', title: 'Menu', route: '/menu', icon: 'menu', color: '#607D8B' },
         { id: '11', title: 'Liquidity', route: '/liquidity', icon: 'water-drop', color: '#03DAC6' },
         { id: '12', title: 'Liabilities', route: '/liabilities', icon: 'remove-circle', color: '#F44336' },
         { id: '13', title: 'Investments & Receivables', route: '/investments-receivables', icon: 'pie-chart', color: '#8BC34A' },
