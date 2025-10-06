@@ -191,26 +191,46 @@ const MenuScreen: React.FC = () => {
     </View>
   );
 
-  return (
-    <ScreenLayout>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Menu</Text>
-        </View>
+  // Debug version - Add this temporarily to test
+// Replace the return statement in menu.tsx with this simplified version
 
-        <ScrollView 
-          style={styles.scrollView} 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {menuGroups.map((group, index) => renderMenuGroup(group, index))}
-        </ScrollView>
-      </SafeAreaView>
-    </ScreenLayout>
-  );
+return (
+  <View style={{ flex: 1, backgroundColor: '#F8F9FA' }}>
+    <View style={{ padding: 20, backgroundColor: '#FFFFFF' }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>MENU DEBUG</Text>
+    </View>
+    
+    <ScrollView style={{ flex: 1, padding: 20 }}>
+      {/* Test Group 1 */}
+      <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000', marginBottom: 10 }}>
+        ACCOUNTS
+      </Text>
+      <View style={{ backgroundColor: '#FFF', borderRadius: 8, padding: 10, marginBottom: 20 }}>
+        <Text>Cash</Text>
+        <Text>Accounts</Text>
+        <Text>Crypto Assets</Text>
+      </View>
+
+      {/* Test Group 2 */}
+      <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000', marginBottom: 10 }}>
+        LIABILITIES
+      </Text>
+      <View style={{ backgroundColor: '#FFF', borderRadius: 8, padding: 10, marginBottom: 20 }}>
+        <Text>Loans</Text>
+        <Text>Credit Cards</Text>
+      </View>
+
+      {/* Test Group 3 */}
+      <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000', marginBottom: 10 }}>
+        INVESTMENTS
+      </Text>
+      <View style={{ backgroundColor: '#FFF', borderRadius: 8, padding: 10, marginBottom: 20 }}>
+        <Text>Receivables</Text>
+        <Text>Investments</Text>
+      </View>
+    </ScrollView>
+  </View>
+);
 };
 
 const styles = StyleSheet.create({
