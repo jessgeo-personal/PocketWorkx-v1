@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+
 import ScreenLayout from '../components/ScreenLayout';
 import { formatCompactCurrency } from '../utils/currency';
 import { colors } from '../utils/theme';
@@ -31,10 +33,9 @@ type Account = {
   id: string;
   bankName: string;
   nickname: string;
-  accountNumberMasked: string; // e.g., ****1234
+  accountNumberMasked: string;
   type: AccountType;
   balance: Money;
-  institutionLogo?: string;
   lastSynced?: Date | null;
   encryptedData: {
     encryptionKey: string;
@@ -138,6 +139,7 @@ const initialAccounts: Account[] = [
 ];
 
 const AccountsScreen: React.FC = () => {
+  const router = useRouter();
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
@@ -226,6 +228,15 @@ const AccountsScreen: React.FC = () => {
     ]);
   };
 
+  const getBankBadgeColor = (bankName: string) => {
+    const b = bankName.toLowerCase();
+    if (b.includes('icici')) return '#F37021';
+    if (b.includes('hdfc')) return '#0054A6';
+    if (b.includes('sbi')) return '#1E88E5';
+    if (b.includes('axis')) return '#AE275F';
+    return '#666666';
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Accounts</Text>
@@ -272,15 +283,6 @@ const AccountsScreen: React.FC = () => {
     </View>
   );
 
-  const getBankBadgeColor = (bankName: string) => {
-    const b = bankName.toLowerCase();
-    if (b.includes('icici')) return '#F37021';
-    if (b.includes('hdfc')) return '#0054A6';
-    if (b.includes('sbi')) return '#1E88E5';
-    if (b.includes('axis')) return '#AE275F';
-    return '#666666';
-  };
-
   const renderAccountCard = (acc: Account) => (
     <View key={acc.id} style={styles.accountCard}>
       <View style={styles.accountHeader}>
@@ -306,12 +308,18 @@ const AccountsScreen: React.FC = () => {
       </View>
 
       <View style={styles.accountActions}>
-        <TouchableOpacity style={styles.rowAction} onPress={() => Alert.alert('Coming Soon', 'View Account details will open next.')}>
+        <TouchableOpacity
+          style={styles.rowAction}
+          onPress={() => router.push(`/account/${acc.id}`)}
+        >
           <MaterialIcons name="visibility" size={18} color={colors.textPrimary} />
           <Text style={styles.rowActionText}>View</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.rowAction} onPress={() => Alert.alert('Coming Soon', 'Edit Account flow to be implemented.')}>
+        <TouchableOpacity
+          style={styles.rowAction}
+          onPress={() => Alert.alert('Coming Soon', 'Edit Account flow to be implemented.')}
+        >
           <MaterialIcons name="edit" size={18} color={colors.textPrimary} />
           <Text style={styles.rowActionText}>Edit</Text>
         </TouchableOpacity>
@@ -532,7 +540,6 @@ const styles = StyleSheet.create({
   rowAction: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
   rowActionText: { fontSize: 13, color: colors.textPrimary, marginLeft: 6 },
 
-  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -600,7 +607,6 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
 
-  // Empty state
   emptyContainer: { alignItems: 'center', paddingVertical: 40 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: '#666666', marginTop: 16, marginBottom: 4 },
   emptySubtext: { fontSize: 14, color: '#999999', textAlign: 'center' },
