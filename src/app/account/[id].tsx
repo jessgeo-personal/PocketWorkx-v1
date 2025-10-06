@@ -36,7 +36,7 @@ const AccountDetailScreen: React.FC = () => {
       setLoading(true);
       const data = await fetchAccountById(id);
       setAccount(data);
-    } catch (e) {
+    } catch {
       Alert.alert('Error', 'Failed to load account data.');
     } finally {
       setLoading(false);
@@ -96,13 +96,18 @@ const AccountDetailScreen: React.FC = () => {
         {/* Header with Add Transaction */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>{account.nickname}</Text>
-          <TouchableOpacity onPress={() => router.push(`/account/${id}/transaction/new`)}>
-            <MaterialIcons name="add" size={28} color={colors.primary} />
+          <TouchableOpacity
+            style={styles.addIconContainer}
+            onPress={() => router.push(`/account/${id}/transaction/new`)}
+          >
+            <MaterialIcons name="add" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
         {/* Account Summary */}
-        <Text style={styles.subtitle}>{account.bankName} • {account.accountNumberMasked}</Text>
+        <Text style={styles.subtitle}>
+          {account.bankName} • {account.accountNumberMasked}
+        </Text>
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceLabel}>Current Balance</Text>
           <Text style={styles.balanceValue}>
@@ -110,7 +115,9 @@ const AccountDetailScreen: React.FC = () => {
           </Text>
         </View>
         <Text style={styles.meta}>Type: {account.type.toUpperCase()}</Text>
-        <Text style={styles.meta}>Last synced: {new Date(account.lastSynced!).toLocaleDateString()}</Text>
+        <Text style={styles.meta}>
+          Last synced: {new Date(account.lastSynced!).toLocaleDateString()}
+        </Text>
 
         {/* Transactions */}
         <Text style={styles.sectionHeader}>Recent Transactions</Text>
@@ -124,7 +131,9 @@ const AccountDetailScreen: React.FC = () => {
           ListEmptyComponent={() => (
             <View style={styles.emptyTxn}>
               <Text style={styles.emptyText}>No transactions yet</Text>
-              <Text style={styles.emptySubtext}>Add your first transaction using the + button</Text>
+              <Text style={styles.emptySubtext}>
+                Add your first transaction using the + button
+              </Text>
             </View>
           )}
         />
@@ -136,23 +145,27 @@ const AccountDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, padding: 20, backgroundColor: '#F8F9FA' },
-  
+
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
+  addIconContainer: {
+    padding: 8,
+    borderRadius: 20,
+  },
   title: { fontSize: 24, fontWeight: '600', color: '#1A1A1A' },
-  
+
   subtitle: { fontSize: 14, color: '#666666', marginVertical: 8 },
-  
+
   balanceContainer: { marginVertical: 24 },
   balanceLabel: { fontSize: 14, color: '#999999', marginBottom: 4 },
   balanceValue: { fontSize: 32, fontWeight: '700', color: colors.secondary },
-  
+
   meta: { fontSize: 12, color: '#666666', marginBottom: 8 },
-  
+
   sectionHeader: {
     fontSize: 18,
     fontWeight: '600',
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 12,
   },
-  
+
   txnList: { flexGrow: 0 },
   txnRow: {
     flexDirection: 'row',
@@ -171,7 +184,7 @@ const styles = StyleSheet.create({
   txnDate: { fontSize: 12, color: '#999999' },
   txnAmount: { fontSize: 16, fontWeight: '600' },
   sep: { height: 1, backgroundColor: '#E0E0E0' },
-  
+
   emptyTxn: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 16, color: '#666666', marginBottom: 4 },
   emptySubtext: { fontSize: 12, color: '#999999' },
