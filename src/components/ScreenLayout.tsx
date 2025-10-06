@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 60,
+    height: 120,
     backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.surface,
   },
   logo: {
-    width: 150,
-    height: 40,
+    width: 200,
+    height: 100,
   },
   content: {
     flex: 1,
