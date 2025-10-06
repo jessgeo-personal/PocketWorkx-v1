@@ -5,101 +5,197 @@ import {
   Text,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  TouchableOpacity,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import ScreenLayout from '../components/ScreenLayout';
 
+interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
+interface MenuItem {
+  id: string;
+  title: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  onPress: () => void;
+  badge?: string;
+}
+
 const MenuScreen: React.FC = () => {
-  const menuSections = [
+  const menuGroups: MenuGroup[] = [
     {
-      title: 'Financial Overview',
+      title: 'Accounts',
       items: [
-        { name: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
-        { name: 'Net Worth', route: '/dashboard', icon: 'account-balance-wallet' },
-        { name: 'Financial Health', route: '/analytics', icon: 'favorite' },
-      ]
-    },
-    {
-      title: 'Assets & Accounts',
-      items: [
-        { name: 'Cash', route: '/cash', icon: 'account-balance-wallet' },
-        { name: 'Bank Accounts', route: '/accounts', icon: 'account-balance' },
-        { name: 'Crypto Assets', route: '/crypto', icon: 'currency-bitcoin' },
-        { name: 'Investments', route: '/investments', icon: 'trending-up' },
-        { name: 'Liquidity', route: '/liquidity', icon: 'water-drop' },
+        {
+          id: 'cash',
+          title: 'Cash',
+          icon: 'account-balance-wallet',
+          onPress: () => console.log('Cash')
+        },
+        {
+          id: 'accounts',
+          title: 'Accounts',
+          icon: 'account-balance',
+          onPress: () => console.log('Accounts')
+        },
+        {
+          id: 'crypto',
+          title: 'Crypto Assets',
+          icon: 'currency-bitcoin',
+          onPress: () => console.log('Crypto Assets')
+        }
       ]
     },
     {
       title: 'Liabilities',
       items: [
-        { name: 'Loans', route: '/loans', icon: 'trending-down' },
-        { name: 'Credit Cards', route: '/credit-cards', icon: 'credit-card' },
-        { name: 'Liabilities', route: '/liabilities', icon: 'remove-circle' },
+        {
+          id: 'loans',
+          title: 'Loans',
+          icon: 'home',
+          onPress: () => console.log('Loans')
+        },
+        {
+          id: 'credit-cards',
+          title: 'Credit Cards',
+          icon: 'credit-card',
+          onPress: () => console.log('Credit Cards')
+        }
       ]
     },
     {
-      title: 'Income & Receivables',
+      title: 'Investments',
       items: [
-        { name: 'Receivables', route: '/receivables', icon: 'receipt' },
-        { name: 'Cash Flow', route: '/cashflow', icon: 'swap-horiz' },
+        {
+          id: 'receivables',
+          title: 'Receivables',
+          icon: 'receipt',
+          onPress: () => console.log('Receivables')
+        },
+        {
+          id: 'investments',
+          title: 'Investments',
+          icon: 'trending-up',
+          onPress: () => console.log('Investments')
+        }
       ]
     },
     {
-      title: 'Analysis & Reports',
+      title: 'Analytics',
       items: [
-        { name: 'Analytics', route: '/analytics', icon: 'analytics' },
-        { name: 'Trends', route: '/trends', icon: 'show-chart' },
+        {
+          id: 'dashboard',
+          title: 'Dashboard',
+          icon: 'dashboard',
+          onPress: () => console.log('Dashboard')
+        },
+        {
+          id: 'trends',
+          title: 'Trends',
+          icon: 'analytics',
+          onPress: () => console.log('Trends')
+        },
+        {
+          id: 'cashflow',
+          title: 'Cashflow',
+          icon: 'water-drop',
+          onPress: () => console.log('Cashflow')
+        }
+      ]
+    },
+    {
+      title: 'Quick Actions',
+      items: [
+        {
+          id: 'add-account',
+          title: 'Add Account',
+          icon: 'add-circle',
+          onPress: () => console.log('Add Account')
+        },
+        {
+          id: 'add-crypto',
+          title: 'Add Crypto Acct',
+          icon: 'add-circle-outline',
+          onPress: () => console.log('Add Crypto Account')
+        },
+        {
+          id: 'scan-receipts',
+          title: 'Scan receipts',
+          icon: 'qr-code-scanner',
+          onPress: () => console.log('Scan receipts')
+        },
+        {
+          id: 'upload-statements',
+          title: 'Upload Statements',
+          icon: 'upload-file',
+          onPress: () => console.log('Upload Statements')
+        },
+        {
+          id: 'scan-sms',
+          title: 'Scan SMS for transactions',
+          icon: 'message',
+          onPress: () => console.log('Scan SMS')
+        },
+        {
+          id: 'scan-emails',
+          title: 'Scan Emails for transactions',
+          icon: 'email',
+          onPress: () => console.log('Scan Emails')
+        },
+        {
+          id: 'add-cash',
+          title: 'Add Cash',
+          icon: 'add',
+          onPress: () => console.log('Add Cash')
+        }
       ]
     }
   ];
 
-  const handleMenuPress = (route: string) => {
-    router.push(route as any);
-  };
+  const renderMenuItem = (item: MenuItem) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.menuItem}
+      onPress={item.onPress}
+    >
+      <View style={styles.menuItemIcon}>
+        <MaterialIcons name={item.icon} size={24} color="#4A90E2" />
+      </View>
+      <Text style={styles.menuItemText}>{item.title}</Text>
+      {item.badge && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{item.badge}</Text>
+        </View>
+      )}
+      <MaterialIcons name="chevron-right" size={20} color="#CCCCCC" />
+    </TouchableOpacity>
+  );
+
+  const renderMenuGroup = (group: MenuGroup) => (
+    <View key={group.title} style={styles.menuGroup}>
+      <Text style={styles.groupTitle}>{group.title}</Text>
+      <View style={styles.groupContainer}>
+        {group.items.map(renderMenuItem)}
+      </View>
+    </View>
+  );
 
   return (
     <ScreenLayout>
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Menu</Text>
-          <MaterialIcons name="menu" size={24} color="#607D8B" />
         </View>
-        
+
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {menuSections.map((section, sectionIndex) => (
-            <View key={sectionIndex} style={styles.menuSection}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              {section.items.map((item, itemIndex) => (
-                <TouchableOpacity
-                  key={itemIndex}
-                  style={styles.menuItem}
-                  onPress={() => handleMenuPress(item.route)}
-                >
-                  <MaterialIcons 
-                    name={item.icon as any} 
-                    size={24} 
-                    color="#607D8B" 
-                  />
-                  <Text style={styles.menuItemText}>{item.name}</Text>
-                  <MaterialIcons name="chevron-right" size={20} color="#999" />
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))}
-          
-          <View style={styles.appInfo}>
-            <Text style={styles.appInfoTitle}>PocketWorkx</Text>
-            <Text style={styles.appInfoVersion}>Version 1.0.0</Text>
-            <Text style={styles.appInfoDescription}>
-              Your personal financial management companion
-            </Text>
-          </View>
+          {menuGroups.map(renderMenuGroup)}
         </ScrollView>
       </SafeAreaView>
     </ScreenLayout>
@@ -112,79 +208,81 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: '#F0F0F0',
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#1A1A1A',
   },
   scrollView: {
     flex: 1,
   },
-  menuSection: {
+  menuGroup: {
+    marginBottom: 24,
+  },
+  groupTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666666',
+    marginBottom: 8,
+    marginHorizontal: 20,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  groupContainer: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
-    marginVertical: 8,
     borderRadius: 12,
-    elevation: 2,
+    overflow: 'hidden',
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F8F9FA',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#F0F0F0',
+  },
+  menuItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   menuItemText: {
-    fontSize: 16,
-    color: '#333333',
-    marginLeft: 16,
     flex: 1,
+    fontSize: 16,
+    color: '#1A1A1A',
+    fontWeight: '500',
   },
-  appInfo: {
-    alignItems: 'center',
-    padding: 40,
-    marginBottom: 100,
+  badge: {
+    backgroundColor: '#E74C3C',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: 8,
   },
-  appInfoTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#607D8B',
-    marginBottom: 4,
-  },
-  appInfoVersion: {
-    fontSize: 14,
-    color: '#999999',
-    marginBottom: 8,
-  },
-  appInfoDescription: {
-    fontSize: 12,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 16,
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
   },
 });
 
