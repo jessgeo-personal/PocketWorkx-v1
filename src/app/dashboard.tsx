@@ -17,6 +17,7 @@ import ScreenLayout from '../components/ScreenLayout';
 import DocumentUploadModal from '../components/DocumentUploadModal';
 import { DocumentParsingResult } from '../types/finance';
 import { Image } from 'react-native';
+import logo from '../assets/logo.png';
 
 
 const DashboardScreen: React.FC = () => {
