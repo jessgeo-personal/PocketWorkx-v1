@@ -1,4 +1,4 @@
-// src/components/SlidingMenu.tsx - GROUPED VERSION based on mockup slide 2
+// src/components/SlidingMenu.tsx - COMPLETE WORKING VERSION
 import React from 'react';
 import {
   View,
@@ -8,7 +8,6 @@ import {
   Modal,
   Animated,
   Dimensions,
-  StatusBar,
   ScrollView,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -120,15 +119,14 @@ const SlidingMenu: React.FC<SlidingMenuProps> = ({ visible, onClose }) => {
     </TouchableOpacity>
   );
 
-const renderMenuGroup = (group: MenuGroup) => (
-  <View key={group.title} style={styles.menuGroup}>
-    <Text style={styles.groupTitle}>{group.title}</Text>
-    <View style={styles.groupGrid}>
-      {group.items.map(renderMenuItem)}
+  const renderMenuGroup = (group: MenuGroup) => (
+    <View key={group.title} style={styles.menuGroup}>
+      <Text style={styles.groupTitle}>{group.title}</Text>
+      <View style={styles.groupGrid}>
+        {group.items.map(renderMenuItem)}
+      </View>
     </View>
-  </View>
-);
-
+  );
 
   return (
     <Modal
@@ -163,7 +161,7 @@ const renderMenuGroup = (group: MenuGroup) => (
           </View>
 
           {/* Scrollable Menu Groups */}
-          <ScrollView 
+          <ScrollView
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
