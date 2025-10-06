@@ -1,52 +1,53 @@
 // src/components/ProcessingIndicator.tsx
+
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { ProcessingProgress } from '../types/finance';
+import { colors } from '../utils/theme';
 
 interface ProcessingIndicatorProps {
   progress: ProcessingProgress;
 }
 
 const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ progress }) => {
-  const { stage, progress: percent, currentStep, totalSteps, currentStepIndex } = progress;
-
   return (
     <View style={styles.container}>
-      <Text style={styles.stageText}>{stage.toUpperCase()}</Text>
+      <ActivityIndicator size="large" color={colors.primary} />
+      <Text style={styles.stepText}>{progress.currentStep}</Text>
       <View style={styles.progressBarBackground}>
-        <View style={[styles.progressBarFill, { width: `${percent}%`}]} />
+        <View style={[styles.progressBarFill, { width: `${progress.progress}%` }]} />
       </View>
-      <Text style={styles.detailText}>{`${currentStepIndex}/${totalSteps}: ${currentStep}`}</Text>
+      <Text style={styles.percentageText}>{progress.progress}%</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 12,
+    width: '100%',
     alignItems: 'center',
   },
-  stageText: {
+  stepText: {
+    marginTop: 12,
     fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
+    color: colors.textPrimary,
   },
   progressBarBackground: {
-    width: '100%',
+    width: '80%',
     height: 8,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.surface,
     borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 4,
+    marginTop: 12,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#357ABD',
+    backgroundColor: colors.primary,
+    borderRadius: 4,
   },
-  detailText: {
+  percentageText: {
+    marginTop: 8,
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
 });
 

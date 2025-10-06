@@ -1,12 +1,9 @@
 // src/components/FloatingMenuButton.tsx
-import React from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-} from 'react-native';
+
+import React, { useEffect, useRef } from 'react';
+import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { colors } from '../utils/theme';
 
 interface FloatingMenuButtonProps {
   onPress: () => void;
@@ -14,9 +11,9 @@ interface FloatingMenuButtonProps {
 }
 
 const FloatingMenuButton: React.FC<FloatingMenuButtonProps> = ({ onPress, isMenuOpen }) => {
-  const rotateAnim = React.useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.timing(rotateAnim, {
       toValue: isMenuOpen ? 1 : 0,
       duration: 300,
@@ -31,19 +28,11 @@ const FloatingMenuButton: React.FC<FloatingMenuButtonProps> = ({ onPress, isMenu
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
-        <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-          <MaterialIcons 
-            name={isMenuOpen ? "close" : "menu"} 
-            size={28} 
-            color="#FFFFFF" 
-          />
-        </Animated.View>
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+        <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.8}>
+          <MaterialIcons name={isMenuOpen ? 'close' : 'menu'} size={28} color={colors.background} />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 };
@@ -61,15 +50,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#545454', // Grey button as per mockup
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },

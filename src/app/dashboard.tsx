@@ -1,4 +1,5 @@
-// Quick fix for src/app/dashboard.tsx - ensure props are passed correctly
+// src/app/dashboard.tsx
+
 import React, { useState } from 'react';
 import {
   View,
@@ -8,23 +9,21 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { NetWorthSummary, Money, Transaction as FinanceTransaction } from '../types/finance';
+import { NetWorthSummary, DocumentParsingResult } from '../types/finance';
 import { formatCompactCurrency } from '../utils/currency';
 import ScreenLayout from '../components/ScreenLayout';
 import DocumentUploadModal from '../components/DocumentUploadModal';
-import { DocumentParsingResult } from '../types/finance';
-import { Image } from 'react-native';
 import logo from '../assets/logo.png';
-
+import { colors } from '../utils/theme';
 
 const DashboardScreen: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [parsedResult, setParsedResult] = useState<DocumentParsingResult | null>(null);
 
-  // ENSURE this function exists and is properly typed
   const handleParsed = (result: DocumentParsingResult) => {
     console.log('📄 Received parsed result:', result);
     setParsedResult(result);
@@ -50,19 +49,15 @@ const DashboardScreen: React.FC = () => {
 
   const renderWelcomeHeader = () => (
     <View style={styles.headerContainer}>
-      <Image
-        source={logo}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      <Image source={logo} style={styles.logo} resizeMode="contain" />
       <TouchableOpacity style={styles.menuButton} onPress={() => setModalVisible(true)}>
-        <MaterialIcons name="upload-file" size={24} color="#666" />
+        <MaterialIcons name="upload-file" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
     </View>
   );
 
   const renderNetWorthCard = () => (
-    <LinearGradient colors={['#4A90E2', '#357ABD']} style={styles.netWorthCard}>
+    <LinearGradient colors={[colors.secondary, colors.primary]} style={styles.netWorthCard}>
       <Text style={styles.netWorthLabel}>Your total net worth</Text>
       <Text style={styles.netWorthAmount}>
         {formatCompactCurrency(netWorthData.netWorth.amount, netWorthData.netWorth.currency)}
@@ -73,48 +68,48 @@ const DashboardScreen: React.FC = () => {
   return (
     <ScreenLayout>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
         <ScrollView>
           {renderWelcomeHeader()}
           {renderNetWorthCard()}
         </ScrollView>
+        <DocumentUploadModal
+          visible={isModalVisible}
+          onClose={() => setModalVisible(false)}
+          onParsed={handleParsed}
+        />
       </SafeAreaView>
-      <DocumentUploadModal
-        visible={isModalVisible}
-        onClose={() => setModalVisible(false)}
-        onParsed={handleParsed}
-      />
     </ScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: colors.background },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    //padding: 20,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    height: 80,          // ensure enough vertical space
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
-  welcomeText: { fontSize: 20, fontWeight: '600' },
-  logo: {
-    width: 120,          // adjust to fit your header height
-    height: 40,          // keeps aspect ratio
-    marginBottom: 8,     // space below logo
-    backgroundColor: 'red'   // temporary debug color
-  },
+  logo: { width: 120, height: 40, marginBottom: 0 },
   menuButton: { padding: 8 },
   netWorthCard: {
     margin: 20,
     padding: 24,
     borderRadius: 16,
   },
-  netWorthLabel: { fontSize: 14, color: '#FFFFFF', marginBottom: 8 },
-  netWorthAmount: { fontSize: 32, color: '#FFFFFF', fontWeight: '700' },
+  netWorthLabel: {
+    fontSize: 14,
+    color: colors.background,
+    marginBottom: 8,
+  },
+  netWorthAmount: {
+    fontSize: 32,
+    color: colors.background,
+    fontWeight: '700',
+  },
 });
 
 export default DashboardScreen;

@@ -1,4 +1,5 @@
-// src/components/DocumentUploadModal.tsx - UPDATED WITH PASSWORD SUPPORT
+// src/components/DocumentUploadModal.tsx
+
 import React, { useState } from 'react';
 import {
   Modal,
@@ -12,6 +13,7 @@ import PasswordInputModal from './PasswordInputModal';
 import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
 import { StatementParserService } from '../services/StatementParserService';
 import { FileProcessorService } from '../services/FileProcessorService';
+import { colors } from '../utils/theme';
 
 interface DocumentUploadModalProps {
   visible: boolean;
@@ -30,73 +32,65 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
   const [parsing, setParsing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordAttempt, setPasswordAttempt] = useState(1);
-  const [currentFileUri, setCurrentFileUri] = useState<string>('');
-  const [currentFileName, setCurrentFileName] = useState<string>('');
+  const [currentFileUri, setCurrentFileUri] = useState('');
+  const [currentFileName, setCurrentFileName] = useState('');
 
   const fileProcessor = new FileProcessorService();
   const parserService = new StatementParserService();
 
   const handleDocumentPick = async () => {
     setParsing(true);
-    setProgress({ stage: 'uploading', progress: 10, currentStep: 'Opening file picker', totalSteps: 5, currentStepIndex: 1 });
-    
+    setProgress({ ...progress, stage: 'uploading', progress: 10, currentStep: 'Opening file picker', currentStepIndex: 1 });
+
     try {
       const res = await fileProcessor.pickDocumentAsync();
       if (res.type !== 'success') {
         throw new Error('Document selection cancelled');
       }
-
       setCurrentFileUri(res.uri);
       setCurrentFileName(res.name || 'Unknown');
-      
       await processDocument(res.uri, res.name);
     } catch (e: any) {
-      setProgress({ stage: 'error', progress: 100, currentStep: e.message, totalSteps: 5, currentStepIndex: 5 });
+      setProgress({ ...progress, stage: 'error', progress: 100, currentStep: e.message, currentStepIndex: 5 });
       setParsing(false);
     }
   };
 
   const processDocument = async (fileUri: string, fileName?: string, password?: string) => {
     try {
-      setProgress({ stage: 'uploading', progress: 30, currentStep: 'Reading file', totalSteps: 5, currentStepIndex: 2 });
-      
+      setProgress({ ...progress, stage: 'uploading', progress: 30, currentStep: 'Reading file', currentStepIndex: 2 });
+
       const options: DocumentParsingOptions = { format: 'pdf', ocrEnabled: true };
-      
-      setProgress({ stage: 'parsing', progress: 50, currentStep: 'Checking for password protection', totalSteps: 5, currentStepIndex: 3 });
-      
+
+      setProgress({ ...progress, stage: 'parsing', progress: 50, currentStep: 'Checking for password protection', currentStepIndex: 3 });
+
       const result = await parserService.parseDocumentWithPassword(fileUri, options, password);
-      
-      // Check if password is required
+
       if (!result.success && result.errors.some(e => e.message.includes('Password required'))) {
-        console.log('🔐 Password required, showing password modal');
         setShowPasswordModal(true);
-        return; // Don't finish parsing, wait for password
-      }
-      
-      // Check if password was incorrect
-      if (!result.success && result.errors.some(e => e.message.includes('Incorrect password'))) {
-        console.log('🔐 Incorrect password, showing modal again');
-        setPasswordAttempt(prev => prev + 1);
-        setShowPasswordModal(true);
-        return; // Don't finish parsing, wait for correct password
+        return;
       }
 
-      setProgress({ stage: 'parsing', progress: 80, currentStep: 'Extracting transactions', totalSteps: 5, currentStepIndex: 4 });
-      setProgress({ stage: 'complete', progress: 100, currentStep: 'Done', totalSteps: 5, currentStepIndex: 5 });
-      
+      if (!result.success && result.errors.some(e => e.message.includes('Incorrect password'))) {
+        setPasswordAttempt(prev => prev + 1);
+        setShowPasswordModal(true);
+        return;
+      }
+
+      setProgress({ ...progress, stage: 'parsing', progress: 80, currentStep: 'Extracting transactions', currentStepIndex: 4 });
+      setProgress({ ...progress, stage: 'complete', progress: 100, currentStep: 'Done', currentStepIndex: 5 });
+
       onParsed(result);
       setParsing(false);
     } catch (e: any) {
-      console.error('🔐 Document processing error:', e);
-      setProgress({ stage: 'error', progress: 100, currentStep: e.message, totalSteps: 5, currentStepIndex: 5 });
+      setProgress({ ...progress, stage: 'error', progress: 100, currentStep: e.message, currentStepIndex: 5 });
       setParsing(false);
     }
   };
 
   const handlePasswordSubmit = async (password: string) => {
     setShowPasswordModal(false);
-    setProgress({ stage: 'parsing', progress: 60, currentStep: 'Unlocking PDF with password', totalSteps: 5, currentStepIndex: 3 });
-    
+    setProgress({ ...progress, stage: 'parsing', progress: 60, currentStep: 'Unlocking PDF with password', currentStepIndex: 3 });
     await processDocument(currentFileUri, currentFileName, password);
   };
 
@@ -104,7 +98,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
     setShowPasswordModal(false);
     setPasswordAttempt(1);
     setParsing(false);
-    setProgress({ stage: 'uploading', progress: 0, currentStep: 'Cancelled', totalSteps: 5, currentStepIndex: 0 });
+    setProgress({ ...progress, stage: 'uploading', progress: 0, currentStep: 'Cancelled', currentStepIndex: 0 });
   };
 
   const handleClose = () => {
@@ -118,10 +112,11 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
 
   return (
     <>
-      <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.title}>Upload Statement</Text>
+
             {parsing ? (
               <ProcessingIndicator progress={progress} />
             ) : (
@@ -129,6 +124,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
                 <Text style={styles.uploadText}>Select File</Text>
               </TouchableOpacity>
             )}
+
             <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
               <Text style={styles.closeText}>Close</Text>
             </TouchableOpacity>
@@ -148,13 +144,42 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onCl
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContainer: { width: '80%', backgroundColor: '#FFFFFF', padding: 20, borderRadius: 12, alignItems: 'center' },
-  title: { fontSize: 18, fontWeight: '600', marginBottom: 16 },
-  uploadButton: { backgroundColor: '#357ABD', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8 },
-  uploadText: { color: '#FFFFFF', fontSize: 16 },
-  closeButton: { marginTop: 20 },
-  closeText: { color: '#357ABD', fontSize: 16 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: colors.textPrimary,
+  },
+  uploadButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  uploadText: {
+    color: colors.background,
+    fontSize: 16,
+  },
+  closeButton: {
+    marginTop: 20,
+  },
+  closeText: {
+    color: colors.secondary,
+    fontSize: 16,
+  },
 });
 
 export default DocumentUploadModal;
