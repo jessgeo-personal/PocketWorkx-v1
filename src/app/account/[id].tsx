@@ -12,35 +12,19 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import ScreenLayout from '../../components/ScreenLayout';
 import { formatCompactCurrency } from '../../utils/currency';
 import { colors } from '../../utils/theme';
-import { fetchAccountById } from '../../services/accountService'; // Placeholder import
+
+import { fetchAccountById, addTransaction, Account, Transaction } from '../../services/accountService';
+
+
 
 type Currency = 'INR' | 'USD' | 'EUR' | 'AED' | 'GBP';
 
 interface AccountDetailParams {
   id: string;
-}
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  currency: Currency;
-  type: 'debit' | 'credit';
-}
-
-interface Account {
-  id: string;
-  bankName: string;
-  nickname: string;
-  accountNumberMasked: string;
-  type: string;
-  balance: { amount: number; currency: Currency };
-  lastSynced?: string;
-  transactions: Transaction[];
 }
 
 const AccountDetailScreen: React.FC = () => {

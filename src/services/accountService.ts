@@ -1,11 +1,11 @@
 // src/services/accountService.ts
 
-// Types (can be moved to shared types file later)
-type Currency = 'INR' | 'USD' | 'EUR' | 'AED' | 'GBP';
+// Currency union type used by formatCompactCurrency
+export type Currency = 'INR' | 'USD' | 'EUR' | 'AED' | 'GBP';
 
 export interface Transaction {
   id: string;
-  date: string;
+  date: string;           // ISO string
   description: string;
   amount: number;
   currency: Currency;
@@ -23,7 +23,7 @@ export interface Account {
   transactions: Transaction[];
 }
 
-// Mock data store (will be replaced with AsyncStorage/API later)
+// Mock data store
 const mockAccounts: Record<string, Account> = {
   'a1': {
     id: 'a1',
@@ -91,7 +91,7 @@ const mockAccounts: Record<string, Account> = {
   },
 };
 
-// Service functions
+// Fetch one account by ID
 export const fetchAccountById = async (id: string): Promise<Account> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -105,6 +105,7 @@ export const fetchAccountById = async (id: string): Promise<Account> => {
   });
 };
 
+// Add a transaction to an account and update balance
 export const addTransaction = async (
   accountId: string,
   transaction: Omit<Transaction, 'id'>
@@ -117,27 +118,22 @@ export const addTransaction = async (
         return;
       }
 
-      const newTransaction: Transaction = {
-        ...transaction,
-        id: `t${Date.now()}`,
-      };
+      const newTxn: Transaction = { ...transaction, id: `t${Date.now()}` };
 
-      account.transactions.unshift(newTransaction);
-      
-      // Update balance based on transaction type
+      account.transactions.unshift(newTxn);
       if (transaction.type === 'credit') {
         account.balance.amount += transaction.amount;
       } else {
         account.balance.amount -= transaction.amount;
       }
-      
       account.lastSynced = new Date().toISOString();
-      
-      resolve(newTransaction);
+
+      resolve(newTxn);
     }, 500);
   });
 };
 
+// Get all accounts
 export const getAllAccounts = async (): Promise<Account[]> => {
   return new Promise(resolve => {
     setTimeout(() => {
