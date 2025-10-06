@@ -1,4 +1,5 @@
 // src/app/accounts.tsx
+
 import React, { useMemo, useState } from 'react';
 import {
   View,
@@ -33,10 +34,8 @@ type Account = {
   accountNumberMasked: string; // e.g., ****1234
   type: AccountType;
   balance: Money;
-  institutionLogo?: string; // future: image url or local asset
+  institutionLogo?: string;
   lastSynced?: Date | null;
-
-  // Security & audit (placeholders for later backend work)
   encryptedData: {
     encryptionKey: string;
     encryptionAlgorithm: 'AES-256';
@@ -51,7 +50,7 @@ type Account = {
     version: number;
     changes: Array<{ field: string; from?: any; to?: any; at: Date }>;
   };
-  linkedTransactions: string[]; // transaction ids (future)
+  linkedTransactions: string[];
   metadata?: {
     ifsc?: string;
     holderName?: string;
@@ -142,7 +141,7 @@ const AccountsScreen: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
-  // Add Account form (manual entry for now)
+  // Add Account form
   const [bankName, setBankName] = useState('');
   const [nickname, setNickname] = useState('');
   const [accountNumberMasked, setAccountNumberMasked] = useState('');
@@ -153,7 +152,7 @@ const AccountsScreen: React.FC = () => {
     [accounts]
   );
 
-  // Quick Action placeholders (wired later)
+  // Quick Action placeholders
   const handleUploadStatements = () => {
     Alert.alert('Coming Soon', 'Upload Statements flow will be implemented next.');
   };
@@ -280,7 +279,6 @@ const AccountsScreen: React.FC = () => {
     if (b.includes('sbi')) return '#1E88E5';
     if (b.includes('axis')) return '#AE275F';
     return '#666666';
-    // Note: In future, use institutionLogo and themed badges or images.
   };
 
   const renderAccountCard = (acc: Account) => (
