@@ -1,7 +1,11 @@
-// Add this method to StatementParserService.ts
+// src/services/StatementParserService.ts - COMPLETE FIXED VERSION
+import { DocumentParsingOptions, DocumentParsingResult, ParsedTransaction, ParseError, BankStatementFormat, OCRResult } from '../types/finance';
+import { FileProcessorService } from './FileProcessorService';
+import { detectBankFormat } from './BankFormatDetector';
+import { performOCR } from './OCRService';
+import { extractTransactions } from './TransactionExtractor';
 import { PDFPasswordHandler, PDFPasswordResult } from './PDFPasswordHandler';
 
-// Add this method to the StatementParserService class:
 export class StatementParserService {
   processor = new FileProcessorService();
   passwordHandler = new PDFPasswordHandler();

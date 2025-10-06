@@ -1,4 +1,4 @@
-// src/app/menu.tsx
+// src/app/menu.tsx - FIXED VERSION with visible group titles
 import React from 'react';
 import {
   View,
@@ -156,10 +156,10 @@ const MenuScreen: React.FC = () => {
     }
   ];
 
-  const renderMenuItem = (item: MenuItem) => (
+  const renderMenuItem = (item: MenuItem, isLast: boolean = false) => (
     <TouchableOpacity
       key={item.id}
-      style={styles.menuItem}
+      style={[styles.menuItem, isLast && styles.lastMenuItem]}
       onPress={item.onPress}
     >
       <View style={styles.menuItemIcon}>
@@ -175,11 +175,18 @@ const MenuScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const renderMenuGroup = (group: MenuGroup) => (
-    <View key={group.title} style={styles.menuGroup}>
-      <Text style={styles.groupTitle}>{group.title}</Text>
+  const renderMenuGroup = (group: MenuGroup, groupIndex: number) => (
+    <View key={`${group.title}-${groupIndex}`} style={styles.menuGroup}>
+      {/* Group Title - Make it more visible */}
+      <View style={styles.groupTitleContainer}>
+        <Text style={styles.groupTitle}>{group.title}</Text>
+      </View>
+      
+      {/* Group Items Container */}
       <View style={styles.groupContainer}>
-        {group.items.map(renderMenuItem)}
+        {group.items.map((item, index) => 
+          renderMenuItem(item, index === group.items.length - 1)
+        )}
       </View>
     </View>
   );
@@ -194,8 +201,12 @@ const MenuScreen: React.FC = () => {
           <Text style={styles.headerTitle}>Menu</Text>
         </View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {menuGroups.map(renderMenuGroup)}
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {menuGroups.map((group, index) => renderMenuGroup(group, index))}
         </ScrollView>
       </SafeAreaView>
     </ScreenLayout>
@@ -222,31 +233,37 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   menuGroup: {
-    marginBottom: 24,
+    marginTop: 20,
+  },
+  groupTitleContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginBottom: 8,
   },
   groupTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#666666',
-    marginBottom: 8,
-    marginHorizontal: 20,
+    color: '#1A1A1A',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   groupContainer: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     borderRadius: 12,
     overflow: 'hidden',
-    elevation: 1,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   menuItem: {
     flexDirection: 'row',
@@ -254,17 +271,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  lastMenuItem: {
+    borderBottomWidth: 0,
   },
   menuItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#F0F6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   menuItemText: {
     flex: 1,
@@ -274,10 +294,10 @@ const styles = StyleSheet.create({
   },
   badge: {
     backgroundColor: '#E74C3C',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginRight: 8,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 12,
   },
   badgeText: {
     color: '#FFFFFF',

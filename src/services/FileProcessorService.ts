@@ -1,4 +1,4 @@
-// src/services/FileProcessorService.ts - FIXED VERSION with legacy FileSystem API
+// src/services/FileProcessorService.ts - FIXED VERSION with correct legacy FileSystem API
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy'; // Use legacy API
 import Xlsx from 'xlsx';
@@ -10,7 +10,17 @@ export class FileProcessorService {
       // Use legacy FileSystem API
       const info = await FileSystem.getInfoAsync(fileUri);
       const name = fileUri.split('/').pop() || '';
-      return { size: info.size || 0, type: info.mimeType || '', name };
+      
+      // Legacy API has different property structure
+      if (info.exists) {
+        return { 
+          size: (info as any).size || 0, 
+          type: 'application/pdf', // Legacy API doesn't provide mimeType
+          name 
+        };
+      } else {
+        return { size: 0, type: 'application/pdf', name };
+      }
     } catch (error) {
       console.warn('FileSystem getInfoAsync failed, using fallback:', error);
       // Fallback for content:// URIs
