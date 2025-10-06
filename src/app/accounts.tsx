@@ -14,7 +14,6 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-
 import ScreenLayout from '../components/ScreenLayout';
 import { formatCompactCurrency } from '../utils/currency';
 import { colors } from '../utils/theme';

@@ -1,6 +1,6 @@
 // src/app/account/[id].tsx
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import ScreenLayout from '../../components/ScreenLayout';
 import { formatCompactCurrency } from '../../utils/currency';
@@ -33,35 +33,28 @@ const AccountDetailScreen: React.FC = () => {
 
   const loadAccount = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await fetchAccountById(id);
       setAccount(data);
     } catch {
       Alert.alert('Error', 'Failed to load account data.');
     } finally {
       setLoading(false);
-    }
-  }, [id]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const data = await fetchAccountById(id);
-      setAccount(data);
-    } catch {
-      Alert.alert('Error', 'Refresh failed.');
-    } finally {
       setRefreshing(false);
     }
   }, [id]);
 
-  useEffect(() => {
-    if (!id) {
-      Alert.alert('Error', 'No account ID.', [{ text: 'OK', onPress: () => router.back() }]);
-      return;
-    }
+  // Load on focus (so it refreshes after returning from Add)
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      loadAccount();
+    }, [loadAccount])
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     loadAccount();
-  }, [id, loadAccount]);
+  }, [loadAccount]);
 
   if (loading) {
     return (
@@ -80,9 +73,16 @@ const AccountDetailScreen: React.FC = () => {
       <View style={styles.txnRow}>
         <View>
           <Text style={styles.txnDesc}>{item.description}</Text>
-          <Text style={styles.txnDate}>{new Date(item.date).toLocaleDateString()}</Text>
+          <Text style={styles.txnDate}>
+            {new Date(item.date).toLocaleDateString()}
+          </Text>
         </View>
-        <Text style={[styles.txnAmount, { color: isDebit ? colors.error : colors.secondary }]}>
+        <Text
+          style={[
+            styles.txnAmount,
+            { color: isDebit ? colors.error : colors.secondary },
+          ]}
+        >
           {isDebit ? '-' : '+'}
           {formatCompactCurrency(item.amount, item.currency)}
         </Text>
@@ -98,9 +98,15 @@ const AccountDetailScreen: React.FC = () => {
           <Text style={styles.title}>{account.nickname}</Text>
           <TouchableOpacity
             style={styles.addIconContainer}
-            onPress={() => router.push(`/account/${id}/transaction/new`)}
+            onPress={() =>
+              router.push(`/account/${id}/transaction/new`)
+            }
           >
-            <MaterialIcons name="add" size={28} color={colors.textPrimary} />
+            <MaterialIcons
+              name="add"
+              size={28}
+              color={colors.textPrimary}
+            />
           </TouchableOpacity>
         </View>
 
@@ -111,26 +117,39 @@ const AccountDetailScreen: React.FC = () => {
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceLabel}>Current Balance</Text>
           <Text style={styles.balanceValue}>
-            {formatCompactCurrency(account.balance.amount, account.balance.currency)}
+            {formatCompactCurrency(
+              account.balance.amount,
+              account.balance.currency
+            )}
           </Text>
         </View>
-        <Text style={styles.meta}>Type: {account.type.toUpperCase()}</Text>
         <Text style={styles.meta}>
-          Last synced: {new Date(account.lastSynced!).toLocaleDateString()}
+          Type: {account.type.toUpperCase()}
+        </Text>
+        <Text style={styles.meta}>
+          Last synced:{' '}
+          {new Date(account.lastSynced!).toLocaleDateString()}
         </Text>
 
         {/* Transactions */}
         <Text style={styles.sectionHeader}>Recent Transactions</Text>
         <FlatList
           data={account.transactions}
-          keyExtractor={t => t.id}
+          keyExtractor={(t) => t.id}
           renderItem={renderTransaction}
           ItemSeparatorComponent={() => <View style={styles.sep} />}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+            />
+          }
           style={styles.txnList}
           ListEmptyComponent={() => (
             <View style={styles.emptyTxn}>
-              <Text style={styles.emptyText}>No transactions yet</Text>
+              <Text style={styles.emptyText}>
+                No transactions yet
+              </Text>
               <Text style={styles.emptySubtext}>
                 Add your first transaction using the + button
               </Text>
@@ -162,7 +181,11 @@ const styles = StyleSheet.create({
 
   balanceContainer: { marginVertical: 24 },
   balanceLabel: { fontSize: 14, color: '#999999', marginBottom: 4 },
-  balanceValue: { fontSize: 32, fontWeight: '700', color: colors.secondary },
+  balanceValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.secondary,
+  },
 
   meta: { fontSize: 12, color: '#666666', marginBottom: 8 },
 

@@ -133,6 +133,25 @@ export const addTransaction = async (
   });
 };
 
+// Update account details (e.g., nickname, masked number)
+export const updateAccount = async (
+  accountId: string,
+  updates: Partial<Omit<Account, 'id' | 'transactions'>>
+): Promise<Account> => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const account = mockAccounts[accountId];
+      if (!account) {
+        reject(new Error('Account not found'));
+        return;
+      }
+      Object.assign(account, updates);
+      account.lastSynced = new Date().toISOString();
+      resolve(account);
+    }, 500);
+  });
+};
+
 // Get all accounts
 export const getAllAccounts = async (): Promise<Account[]> => {
   return new Promise(resolve => {

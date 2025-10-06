@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { MaterialIcons } from '@expo/vector-icons';
 import ScreenLayout from '../../../../components/ScreenLayout';
 import { addTransaction } from '../../../../services/accountService';
 import { colors } from '../../../../utils/theme';
@@ -31,6 +32,10 @@ const NewTransactionScreen: React.FC = () => {
   const onChangeDate = (_: any, selected?: Date) => {
     setShowPicker(Platform.OS === 'ios');
     if (selected) setDate(selected);
+  };
+
+  const toggleType = () => {
+    setType(type === 'debit' ? 'credit' : 'debit');
   };
 
   const handleSubmit = async () => {
@@ -61,6 +66,8 @@ const NewTransactionScreen: React.FC = () => {
     }
   };
 
+  const isCredit = type === 'credit';
+
   return (
     <ScreenLayout>
       <View style={styles.container}>
@@ -68,7 +75,7 @@ const NewTransactionScreen: React.FC = () => {
 
         <Text style={styles.label}>Date</Text>
         <TouchableOpacity onPress={() => setShowPicker(true)}>
-          <Text style={styles.input}>
+          <Text style={styles.dateInput}>
             {date.toLocaleDateString()}
           </Text>
         </TouchableOpacity>
@@ -86,7 +93,7 @@ const NewTransactionScreen: React.FC = () => {
           style={styles.input}
           value={description}
           onChangeText={setDescription}
-          placeholder="e.g., Grocery"
+          placeholder="e.g., Grocery Store, Salary"
         />
 
         <Text style={styles.label}>Amount (₹)</Text>
@@ -98,28 +105,26 @@ const NewTransactionScreen: React.FC = () => {
           keyboardType="numeric"
         />
 
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.typeRow}>
-          {(['debit','credit'] as const).map(t => (
-            <TouchableOpacity
-              key={t}
-              style={[
-                styles.typeButton,
-                type === t && styles.typeSelected
-              ]}
-              onPress={() => setType(t)}
-            >
-              <Text
-                style={[
-                  styles.typeText,
-                  type === t && styles.typeTextSelected
-                ]}
-              >
-                {t.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.label}>Transaction Type</Text>
+        <TouchableOpacity
+          style={[
+            styles.typeToggle,
+            { backgroundColor: isCredit ? colors.secondary : colors.error }
+          ]}
+          onPress={toggleType}
+        >
+          <MaterialIcons
+            name={isCredit ? 'add-circle' : 'remove-circle'}
+            size={24}
+            color="#FFFFFF"
+          />
+          <Text style={styles.typeToggleText}>
+            {isCredit ? 'CREDIT (+)' : 'DEBIT (-)'}
+          </Text>
+          <Text style={styles.typeHint}>
+            {isCredit ? 'Money coming in' : 'Money going out'}
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.submitButton, submitting && styles.disabled]}
@@ -138,40 +143,60 @@ const NewTransactionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { padding: 20, flex: 1, backgroundColor: '#F8F9FA' },
   title: { fontSize: 24, fontWeight: '600', marginBottom: 20, color: '#1A1A1A' },
-  label: { fontSize: 14, color: '#333333', marginTop: 12 },
+  
+  label: { fontSize: 14, color: '#333333', marginTop: 16, marginBottom: 8 },
+  
   input: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 6,
+    borderRadius: 8,
     padding: 12,
-    marginTop: 4,
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
   },
-  typeRow: { flexDirection: 'row', marginTop: 8 },
-  typeButton: {
-    flex: 1,
-    padding: 12,
+  
+  dateInput: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 6,
-    marginRight: 8,
+    borderRadius: 8,
+    padding: 12,
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
+    color: '#333333',
+  },
+
+  typeToggle: {
+    flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 8,
   },
-  typeSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  
+  typeToggleText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 12,
+    flex: 1,
   },
-  typeText: { color: '#333333', fontSize: 14 },
-  typeTextSelected: { color: '#FFFFFF', fontWeight: '600' },
+  
+  typeHint: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    opacity: 0.9,
+  },
+
   submitButton: {
-    marginTop: 24,
+    marginTop: 32,
     backgroundColor: colors.secondary,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
+  
   submitText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  
   disabled: { opacity: 0.6 },
 });
 
