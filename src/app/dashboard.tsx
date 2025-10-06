@@ -17,7 +17,7 @@ import ScreenLayout from '../components/ScreenLayout';
 import DocumentUploadModal from '../components/DocumentUploadModal';
 import { DocumentParsingResult } from '../types/finance';
 import { Image } from 'react-native';
-import logo from '../assets/logo.png';
+import logo from 'src/assets/logo.png';
 
 
 const DashboardScreen: React.FC = () => {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     //padding: 20,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    height: 60,          // ensure enough vertical space
+    height: 80,          // ensure enough vertical space
     backgroundColor: '#FFFFFF',
   },
   welcomeText: { fontSize: 20, fontWeight: '600' },
