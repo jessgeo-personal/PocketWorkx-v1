@@ -13,11 +13,16 @@
     "types": ["react", "react-native"],
     "baseUrl": "./",
     "paths": {
-      "@components/*": ["components/*"],
-      "@services/*": ["services/*"],
-      "@types/*": ["types/*"],
-      "@utils/*": ["utils/*"]
+      "@components/*": ["src/components/*"],
+      "@services/*": ["src/services/*"],
+      "@types/*": ["src/types/*"],
+      "@assets/*": ["src/assets/*"],
+      "@utils/*": ["src/utils/*"]
     }
   },
-   "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
+   "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"],
+   "include": [
+    "src",
+    "src/types"
+  ]
 }
