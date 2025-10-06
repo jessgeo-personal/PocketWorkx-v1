@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "assetBundlePatterns": ["src/assets/*"]
+    "assetBundlePatterns": ["src/assets/*"],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
