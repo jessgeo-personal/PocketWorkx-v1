@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#666666', // Grey button as per mockup
+    backgroundColor: '#545454', // Grey button as per mockup
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,

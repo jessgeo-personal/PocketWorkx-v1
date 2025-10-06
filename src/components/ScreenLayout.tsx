@@ -42,6 +42,7 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({ children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffd21f', // Add your background color
   },
 });
 

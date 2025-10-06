@@ -16,6 +16,8 @@ import { formatCompactCurrency } from '../utils/currency';
 import ScreenLayout from '../components/ScreenLayout';
 import DocumentUploadModal from '../components/DocumentUploadModal';
 import { DocumentParsingResult } from '../types/finance';
+import { Image } from 'react-native';
+
 
 const DashboardScreen: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -47,7 +49,11 @@ const DashboardScreen: React.FC = () => {
 
   const renderWelcomeHeader = () => (
     <View style={styles.headerContainer}>
-      <Text style={styles.welcomeText}>Welcome Back, User</Text>
+      <Image
+        source={require('../assets/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <TouchableOpacity style={styles.menuButton} onPress={() => setModalVisible(true)}>
         <MaterialIcons name="upload-file" size={24} color="#666" />
       </TouchableOpacity>
@@ -91,6 +97,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   welcomeText: { fontSize: 20, fontWeight: '600' },
+  logo: {
+    width: 120,          // adjust to fit your header height
+    height: 40,          // keeps aspect ratio
+    marginBottom: 8,     // space below logo
+  },
   menuButton: { padding: 8 },
   netWorthCard: {
     margin: 20,
