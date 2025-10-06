@@ -188,6 +188,7 @@ const styles = StyleSheet.create({
   overlayTouchable: {
     flex: 1,
   },
+// Replace menuContainer style entry with this:
   menuContainer: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
@@ -195,15 +196,14 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 40,
     maxHeight: SCREEN_HEIGHT * 0.85,
+    flex: 1,                // add this
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -5,
-    },
+    shadowOffset: { width: 0, height: -5 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
   },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -232,9 +232,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#F5F5F5',
   },
+  // Replace scrollView style entry with this:
   scrollView: {
-    flex: 1,
+    flexGrow: 1,          // use flexGrow instead of flex
   },
+
   scrollContent: {
     paddingBottom: 16,
   },
