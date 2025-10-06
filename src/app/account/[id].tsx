@@ -16,16 +16,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import ScreenLayout from '../../components/ScreenLayout';
 import { formatCompactCurrency } from '../../utils/currency';
 import { colors } from '../../utils/theme';
-
-import { fetchAccountById, addTransaction, Account, Transaction } from '../../services/accountService';
-
-
-
-type Currency = 'INR' | 'USD' | 'EUR' | 'AED' | 'GBP';
-
-interface AccountDetailParams {
-  id: string;
-}
+import {
+  fetchAccountById,
+  Account,
+  Transaction,
+} from '../../services/accountService';
 
 const AccountDetailScreen: React.FC = () => {
   const router = useRouter();
@@ -102,7 +97,7 @@ const AccountDetailScreen: React.FC = () => {
         <View style={styles.headerRow}>
           <Text style={styles.title}>{account.nickname}</Text>
           <TouchableOpacity onPress={() => router.push(`/account/${id}/transaction/new`)}>
-            <MaterialIcons name="add" size={24} color={colors.primary} />
+            <MaterialIcons name="add" size={28} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -126,6 +121,12 @@ const AccountDetailScreen: React.FC = () => {
           ItemSeparatorComponent={() => <View style={styles.sep} />}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           style={styles.txnList}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyTxn}>
+              <Text style={styles.emptyText}>No transactions yet</Text>
+              <Text style={styles.emptySubtext}>Add your first transaction using the + button</Text>
+            </View>
+          )}
         />
       </View>
     </ScreenLayout>
@@ -135,20 +136,45 @@ const AccountDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, padding: 20, backgroundColor: '#F8F9FA' },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   title: { fontSize: 24, fontWeight: '600', color: '#1A1A1A' },
+  
   subtitle: { fontSize: 14, color: '#666666', marginVertical: 8 },
+  
   balanceContainer: { marginVertical: 24 },
   balanceLabel: { fontSize: 14, color: '#999999', marginBottom: 4 },
   balanceValue: { fontSize: 32, fontWeight: '700', color: colors.secondary },
+  
   meta: { fontSize: 12, color: '#666666', marginBottom: 8 },
-  sectionHeader: { fontSize: 18, fontWeight: '600', color: '#1A1A1A', marginTop: 24, marginBottom: 12 },
+  
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  
   txnList: { flexGrow: 0 },
-  txnRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
+  txnRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
   txnDesc: { fontSize: 14, color: '#333333' },
   txnDate: { fontSize: 12, color: '#999999' },
   txnAmount: { fontSize: 16, fontWeight: '600' },
   sep: { height: 1, backgroundColor: '#E0E0E0' },
+  
+  emptyTxn: { alignItems: 'center', paddingVertical: 40 },
+  emptyText: { fontSize: 16, color: '#666666', marginBottom: 4 },
+  emptySubtext: { fontSize: 12, color: '#999999' },
 });
 
 export default AccountDetailScreen;
