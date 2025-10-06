@@ -1,15 +1,32 @@
 // src/components/ScreenLayout.tsx
 
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { View, StyleSheet, Image, SafeAreaView } from 'react-native';
 import SlidingMenu from './SlidingMenu';
 import FloatingMenuButton from './FloatingMenuButton';
-import { colors } from '../utils/theme';
+import { colors, sectionColors } from '../utils/theme';
 import logo from '../assets/logo.png';
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
 }
+
+// Section theme configuration
+export const sectionTheme = {
+  netWorth: sectionColors.netWorth,
+  cash: sectionColors.cash,
+  accounts: sectionColors.cash,        // accounts treated same as cash
+  liabilities: sectionColors.liabilities,
+  investments: sectionColors.investments,
+  receivables: sectionColors.investments, // same as investments
+  other: sectionColors.allOthers,
+};
+
+// Create context for section colors
+export const SectionThemeContext = createContext(sectionTheme);
+
+// Custom hook to use section theme
+export const useSectionTheme = () => useContext(SectionThemeContext);
 
 const ScreenLayout: React.FC<ScreenLayoutProps> = ({ children }) => {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -22,17 +39,19 @@ const ScreenLayout: React.FC<ScreenLayoutProps> = ({ children }) => {
     setIsMenuVisible(false);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
-      </View>
+return (
+    <SectionThemeContext.Provider value={sectionTheme}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+        </View>
 
-      <View style={styles.content}>{children}</View>
+        <View style={styles.content}>{children}</View>
 
-      <FloatingMenuButton onPress={toggleMenu} isMenuOpen={isMenuVisible} />
-      <SlidingMenu visible={isMenuVisible} onClose={closeMenu} />
-    </SafeAreaView>
+        <FloatingMenuButton onPress={toggleMenu} isMenuOpen={isMenuVisible} />
+        <SlidingMenu visible={isMenuVisible} onClose={closeMenu} />
+      </SafeAreaView>
+    </SectionThemeContext.Provider>
   );
 };
 
