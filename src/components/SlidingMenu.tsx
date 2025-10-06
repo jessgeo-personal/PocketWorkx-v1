@@ -120,14 +120,15 @@ const SlidingMenu: React.FC<SlidingMenuProps> = ({ visible, onClose }) => {
     </TouchableOpacity>
   );
 
-  const renderMenuGroup = (group: MenuGroup) => (
-    <View key={group.title} style={styles.menuGroup}>
-      <Text style={styles.groupTitle}>{group.title}</Text>
-      <View style={styles.groupGrid}>
-        {group.items.map(renderMenuItem)}
-      </View>
+const renderMenuGroup = (group: MenuGroup) => (
+  <View key={group.title} style={styles.menuGroup}>
+    <Text style={styles.groupTitle}>{group.title}</Text>
+    <View style={styles.groupGrid}>
+      {group.items.map(renderMenuItem)}
     </View>
-  );
+  </View>
+);
+
 
   return (
     <Modal
