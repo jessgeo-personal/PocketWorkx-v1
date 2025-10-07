@@ -1,116 +1,118 @@
 // src/app/account/[id]/edit.tsx
 
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import ScreenLayout from '../../../components/ScreenLayout';
 import {
   fetchAccountById,
   updateAccount,
   Account,
 } from '../../../services/accountService';
-import { colors } from '../../../utils/theme';
 
-const EditAccountScreen: React.FC = () => {
+export default function EditAccountScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const params = useLocalSearchParams<{ id: string }>();
-  const id = params.id as string;
 
   const [account, setAccount] = useState<Account | null>(null);
   const [nickname, setNickname] = useState('');
-  const [masked, setMasked] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [bankName, setBankName] = useState('');
+  const [balance, setBalance] = useState('');
+  const [currency, setCurrency] = useState<'INR' | 'USD' | 'EUR' | 'AED' | 'GBP'>('INR');
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAccountById(id).then(a => {
-      setAccount(a);
-      setNickname(a.nickname);
-      setMasked(a.accountNumberMasked);
-    });
+    if (id) loadAccount(id);
   }, [id]);
 
-  const handleSave = async () => {
+  const loadAccount = async (accountId: string) => {
+    setLoading(true);
+    const accDetail = await fetchAccountById(accountId);
+    if (accDetail) {
+      // accDetail includes transactions; strip them
+      const { transactions, ...acct } = accDetail;
+      setAccount(acct);
+      setNickname(acct.nickname);
+      setBankName(acct.bankName);
+      setBalance(String(acct.balance));
+      setCurrency(acct.currency);
+    }
+    setLoading(false);
+  };
+
+  const onSave = async () => {
     if (!account) return;
-    if (!nickname.trim()) {
-      Alert.alert('Error', 'Nickname is required.');
+    if (!nickname || !bankName || !balance) {
+      Alert.alert('Please fill all fields');
       return;
     }
-    setSubmitting(true);
+    setSaving(true);
     try {
-      await updateAccount(id, {
-        nickname: nickname.trim(),
-        accountNumberMasked: masked.trim() || account.accountNumberMasked,
+      await updateAccount(account.id, {
+        nickname,
+        bankName,
+        balance: Number(balance),
+        currency,
       });
       router.back();
-    } catch {
-      Alert.alert('Error', 'Failed to update account.');
-    } finally {
-      setSubmitting(false);
+    } catch (e) {
+      Alert.alert('Error updating account');
+      setSaving(false);
     }
   };
 
-  if (!account) return null;
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Loading…</Text>
+      </View>
+    );
+  }
+
+  if (!account) {
+    return (
+      <View style={styles.center}>
+        <Text>Account not found.</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScreenLayout>
-      <View style={styles.container}>
-        <Text style={styles.title}>Edit Account</Text>
-
-        <Text style={styles.label}>Nickname</Text>
-        <TextInput
-          style={styles.input}
-          value={nickname}
-          onChangeText={setNickname}
-        />
-
-        <Text style={styles.label}>Masked Number</Text>
-        <TextInput
-          style={styles.input}
-          value={masked}
-          onChangeText={setMasked}
-        />
-
-        <TouchableOpacity
-          style={[styles.button, submitting && { opacity: 0.6 }]}
-          onPress={handleSave}
-          disabled={submitting}
-        >
-          <Text style={styles.buttonText}>
-            {submitting ? 'Saving...' : 'Save Changes'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScreenLayout>
+    <View style={styles.container}>
+      <Text style={styles.title}>Edit Account</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nickname"
+        value={nickname}
+        onChangeText={setNickname}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Bank Name"
+        value={bankName}
+        onChangeText={setBankName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Balance"
+        keyboardType="numeric"
+        value={balance}
+        onChangeText={setBalance}
+      />
+      <Button title={saving ? 'Saving…' : 'Save'} onPress={onSave} disabled={saving} />
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#F8F9FA' },
-  title: { fontSize: 24, fontWeight: '600', marginBottom: 20, color: '#1A1A1A' },
-  label: { fontSize: 14, color: '#333333', marginTop: 12 },
+  container: { flex: 1, padding: 16 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 20, marginBottom: 12 },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    marginTop: 4,
+    borderColor: '#ccc',
+    padding: 8,
+    marginBottom: 12,
+    borderRadius: 4,
   },
-  button: {
-    marginTop: 32,
-    backgroundColor: colors.secondary,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });
-
-export default EditAccountScreen;

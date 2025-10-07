@@ -220,7 +220,7 @@ const migrateTo = async (version: string): Promise<void> => {
 };
 
 // Account Service Functions
-export const fetchAccountById = async (id: string): Promise<Account | null> => {
+export const fetchAccountById = async (id: string): Promise<(Account & { transactions: Transaction[] }) | null> => {
   try {
     await initializeStorage();
     await delay(300); // Simulate network delay

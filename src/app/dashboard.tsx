@@ -1,115 +1,88 @@
 // src/app/dashboard.tsx
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Image,
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { NetWorthSummary, DocumentParsingResult } from '../types/finance';
-import { formatCompactCurrency } from '../utils/currency';
-import ScreenLayout from '../components/ScreenLayout';
-import DocumentUploadModal from '../components/DocumentUploadModal';
-import logo from '../assets/logo.png';
-import { colors } from '../utils/theme';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { getAllAccounts, Account } from '../services/accountService';
 
-const DashboardScreen: React.FC = () => {
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [parsedResult, setParsedResult] = useState<DocumentParsingResult | null>(null);
+export default function DashboardScreen() {
+  const router = useRouter();
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleParsed = (result: DocumentParsingResult) => {
-    console.log('📄 Received parsed result:', result);
-    setParsedResult(result);
-    setModalVisible(false);
-    // Show success message or navigate to results
+  useEffect(() => {
+    loadAccounts();
+  }, []);
+
+  const loadAccounts = async () => {
+    setLoading(true);
+    const accts = await getAllAccounts();
+    setAccounts(accts);
+    setLoading(false);
   };
 
-  const netWorthData: NetWorthSummary = {
-    totalAssets: { amount: 17832550, currency: 'INR' },
-    totalLiabilities: { amount: 7500550, currency: 'INR' },
-    netWorth: { amount: 10332000, currency: 'INR' },
-    liquidCash: { amount: 2345300, currency: 'INR' },
-    accountsBalance: { amount: 8650000, currency: 'INR' },
-    cryptoValue: { amount: 6016000, currency: 'INR' },
-    investmentsValue: { amount: 920250, currency: 'INR' },
-    realEstateValue: { amount: 0, currency: 'INR' },
-    receivablesValue: { amount: 0, currency: 'INR' },
-    totalDebt: { amount: 4225000, currency: 'INR' },
-    shortTermDebt: { amount: 125000, currency: 'INR' },
-    longTermDebt: { amount: 4100000, currency: 'INR' },
-    asOfDate: new Date(),
-  };
+  const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const currency = accounts[0]?.currency || 'INR';
 
-  const renderWelcomeHeader = () => (
-    <View style={styles.headerContainer}>
-      <Image source={logo} style={styles.logo} resizeMode="contain" />
-      <TouchableOpacity style={styles.menuButton} onPress={() => setModalVisible(true)}>
-        <MaterialIcons name="upload-file" size={24} color={colors.textPrimary} />
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderNetWorthCard = () => (
-    <LinearGradient colors={[colors.secondary, colors.primary]} style={styles.netWorthCard}>
-      <Text style={styles.netWorthLabel}>Your total net worth</Text>
-      <Text style={styles.netWorthAmount}>
-        {formatCompactCurrency(netWorthData.netWorth.amount, netWorthData.netWorth.currency)}
-      </Text>
-    </LinearGradient>
-  );
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Loading…</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScreenLayout>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-        <ScrollView>
-          {renderWelcomeHeader()}
-          {renderNetWorthCard()}
-        </ScrollView>
-        <DocumentUploadModal
-          visible={isModalVisible}
-          onClose={() => setModalVisible(false)}
-          onParsed={handleParsed}
-        />
-      </SafeAreaView>
-    </ScreenLayout>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Dashboard</Text>
+      <Text style={styles.netWorth}>
+        Net Worth: {currency} {totalBalance.toLocaleString()}
+      </Text>
+      <Button title="Refresh" onPress={loadAccounts} />
+
+      {accounts.map((acc) => (
+        <View key={acc.id} style={styles.card}>
+          <Text style={styles.cardTitle}>{acc.nickname}</Text>
+          <Text>
+            Balance: {acc.currency} {acc.balance.toLocaleString()}
+          </Text>
+          <Button
+            title="View Details"
+            onPress={() => router.push(`/account/${acc.id}`)}
+          />
+        </View>
+      ))}
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  container: {
+    padding: 16,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: colors.background,
   },
-  logo: { width: 120, height: 40, marginBottom: 0 },
-  menuButton: { padding: 8 },
-  netWorthCard: {
-    margin: 20,
-    padding: 24,
-    borderRadius: 16,
+  title: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 12,
   },
-  netWorthLabel: {
-    fontSize: 14,
-    color: colors.background,
-    marginBottom: 8,
+  netWorth: {
+    fontSize: 20,
+    marginBottom: 16,
   },
-  netWorthAmount: {
-    fontSize: 32,
-    color: colors.background,
-    fontWeight: '700',
+  card: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 12,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '500',
   },
 });
-
-export default DashboardScreen;

@@ -1,150 +1,72 @@
-// src/services/FileProcessorService.ts - FIXED VERSION with correct legacy FileSystem API
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy'; // Use legacy API
-import Xlsx from 'xlsx';
-import { ParsingConfig } from '../types/finance';
+// src/services/FileProcessorService.ts
+import Papa from 'papaparse';
+import * as FileSystem from 'expo-file-system';
+import { StorageError } from './accountService';
 
-export class FileProcessorService {
-  async getFileInfo(fileUri: string): Promise<{ size: number; type: string; name: string }> {
-    try {
-      // Use legacy FileSystem API
-      const info = await FileSystem.getInfoAsync(fileUri);
-      const name = fileUri.split('/').pop() || '';
-      
-      // Legacy API has different property structure
-      if (info.exists) {
-        return { 
-          size: (info as any).size || 0, 
-          type: 'application/pdf', // Legacy API doesn't provide mimeType
-          name 
-        };
-      } else {
-        return { size: 0, type: 'application/pdf', name };
-      }
-    } catch (error) {
-      console.warn('FileSystem getInfoAsync failed, using fallback:', error);
-      // Fallback for content:// URIs
-      const name = fileUri.split('/').pop() || 'unknown';
-      return { size: 0, type: 'application/pdf', name };
-    }
-  }
+/**
+ * Interface for processed transaction data
+ */
+export interface ProcessedTransaction {
+  accountId: string;
+  description: string;
+  amount: number;
+  type: 'CREDIT' | 'DEBIT';
+  date: string;
+  category?: string;
+}
 
-  async readPDF(fileUri: string): Promise<string> {
-    try {
-      console.log('📄 Reading PDF from URI:', fileUri);
-      
-      // For content:// URIs, we need to copy to cache first
-      if (fileUri.startsWith('content://')) {
-        const fileName = `temp_${Date.now()}.pdf`;
-        const localUri = FileSystem.documentDirectory + fileName;
-        
-        console.log('📄 Copying from content:// to local:', localUri);
-        await FileSystem.copyAsync({ from: fileUri, to: localUri });
-        
-        const b64 = await FileSystem.readAsStringAsync(localUri, { 
-          encoding: FileSystem.EncodingType.Base64 
-        });
-        
-        console.log('📄 PDF read successfully, base64 length:', b64.length);
-        
-        // Clean up temp file
-        await FileSystem.deleteAsync(localUri, { idempotent: true });
-        return b64;
-      } else {
-        const b64 = await FileSystem.readAsStringAsync(fileUri, { 
-          encoding: FileSystem.EncodingType.Base64 
-        });
-        return b64;
-      }
-    } catch (error) {
-      console.error('📄 PDF read failed:', error);
-      throw new Error(`Failed to read PDF: ${error}`);
-    }
-  }
-
-  async readExcel(fileUri: string): Promise<string[]> {
-    try {
-      let workingUri = fileUri;
-      
-      // For content:// URIs, copy to cache first
-      if (fileUri.startsWith('content://')) {
-        const fileName = `temp_${Date.now()}.xlsx`;
-        workingUri = FileSystem.documentDirectory + fileName;
-        await FileSystem.copyAsync({ from: fileUri, to: workingUri });
-      }
-
-      const buffer = await FileSystem.readAsStringAsync(workingUri, { 
-        encoding: FileSystem.EncodingType.Base64 
-      });
-      const workbook = Xlsx.read(buffer, { type: 'base64' });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const rows = Xlsx.utils.sheet_to_json(sheet, { header: 1, raw: false });
-      
-      // Clean up temp file if we created one
-      if (fileUri.startsWith('content://')) {
-        await FileSystem.deleteAsync(workingUri, { idempotent: true });
-      }
-      
-      return rows.map(row => Array.isArray(row) ? row.join(' ') : String(row));
-    } catch (error) {
-      throw new Error(`Failed to read Excel: ${error}`);
-    }
-  }
-
-  async readCSV(fileUri: string): Promise<string[]> {
-    try {
-      let workingUri = fileUri;
-      
-      // For content:// URIs, copy to cache first
-      if (fileUri.startsWith('content://')) {
-        const fileName = `temp_${Date.now()}.csv`;
-        workingUri = FileSystem.documentDirectory + fileName;
-        await FileSystem.copyAsync({ from: fileUri, to: workingUri });
-      }
-
-      const content = await FileSystem.readAsStringAsync(workingUri, { 
-        encoding: FileSystem.EncodingType.UTF8 
-      });
-      
-      // Clean up temp file if we created one
-      if (fileUri.startsWith('content://')) {
-        await FileSystem.deleteAsync(workingUri, { idempotent: true });
-      }
-      
-      return content.split('\n');
-    } catch (error) {
-      throw new Error(`Failed to read CSV: ${error}`);
-    }
-  }
-
-  async pickDocumentAsync(): Promise<{ type: string; uri: string; name?: string; size?: number }> {
-    const result = await DocumentPicker.getDocumentAsync({ 
-      type: '*/*', 
-      copyToCacheDirectory: false 
+/**
+ * Reads a CSV file from the given URI and parses it into JSON
+ */
+export const parseCsvFile = async (
+  fileUri: string
+): Promise<ProcessedTransaction[]> => {
+  try {
+    // Read file content as string with UTF-8 encoding
+    const fileContent = await FileSystem.readAsStringAsync(fileUri, {
+      encoding: 'utf8',
     });
 
-    // Handle new API format
-    if (result.canceled) {
-      return { type: 'cancel', uri: '' };
+    // Parse CSV using PapaParse
+    const result = Papa.parse<any>(fileContent, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
+    });
+
+    if (result.errors.length) {
+      console.warn('CSV parsing errors:', result.errors);
     }
 
-    // New format has assets array
-    if (result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      return {
-        type: 'success',
-        uri: asset.uri,
-        name: asset.name,
-        size: asset.size
-      };
-    }
+    // Map rows to ProcessedTransaction
+    const transactions: ProcessedTransaction[] = result.data.map(row => ({
+      accountId: String(row.accountId || ''),
+      description: String(row.description || ''),
+      amount: Number(row.amount || 0),
+      type: row.type === 'DEBIT' ? 'DEBIT' : 'CREDIT',
+      date: String(row.date || ''),
+      category: row.category ? String(row.category) : undefined,
+    }));
 
-    // Fallback for old format (if still used)
-    if ((result as any).type === 'success') {
-      return result as any;
-    }
-
-    return { type: 'cancel', uri: '' };
+    return transactions;
+  } catch (error) {
+    console.error('parseCsvFile error:', error);
+    throw new StorageError('Failed to process CSV file', error as Error);
   }
-}
+};
+
+/**
+ * Processes a list of CSV file URIs and returns combined transactions
+ */
+export const processCsvFiles = async (
+  fileUris: string[]
+): Promise<ProcessedTransaction[]> => {
+  const allTransactions: ProcessedTransaction[] = [];
+
+  for (const uri of fileUris) {
+    const transactions = await parseCsvFile(uri);
+    allTransactions.push(...transactions);
+  }
+
+  return allTransactions;
+};

@@ -5,141 +5,104 @@ import {
   Modal,
   View,
   Text,
+  Button,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import ProcessingIndicator from './ProcessingIndicator';
-import PasswordInputModal from './PasswordInputModal';
-import { DocumentParsingOptions, ProcessingProgress, DocumentParsingResult } from '../types/finance';
-import { StatementParserService } from '../services/StatementParserService';
-import { FileProcessorService } from '../services/FileProcessorService';
-import { colors } from '../utils/theme';
+import * as DocumentPicker from 'expo-document-picker';
+import {
+  parseStatementFile,
+  parseStatementFiles,
+} from '../services/StatementParserService';
+import { ProcessedTransaction } from '../services/FileProcessorService';
 
 interface DocumentUploadModalProps {
   visible: boolean;
   onClose: () => void;
-  onParsed: (result: DocumentParsingResult) => void;
+  onParsed: (transactions: ProcessedTransaction[]) => void;
 }
 
-const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ visible, onClose, onParsed }) => {
-  const [progress, setProgress] = useState<ProcessingProgress>({
-    stage: 'uploading',
-    progress: 0,
-    currentStep: 'Waiting to start',
-    totalSteps: 5,
-    currentStepIndex: 0,
-  });
-  const [parsing, setParsing] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordAttempt, setPasswordAttempt] = useState(1);
-  const [currentFileUri, setCurrentFileUri] = useState('');
-  const [currentFileName, setCurrentFileName] = useState('');
+const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
+  visible,
+  onClose,
+  onParsed,
+}) => {
+  const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
 
-  const fileProcessor = new FileProcessorService();
-  const parserService = new StatementParserService();
+  // Local types for picker results
+  type DocSuccess = {
+    type: 'success';
+    uri: string;
+    name: string;
+    size?: number;
+  };
+  type DocCancel = { type: 'cancel' };
+  type DocResult = DocSuccess | DocCancel;
 
-  const handleDocumentPick = async () => {
-    setParsing(true);
-    setProgress({ ...progress, stage: 'uploading', progress: 10, currentStep: 'Opening file picker', currentStepIndex: 1 });
-
-    try {
-      const res = await fileProcessor.pickDocumentAsync();
-      if (res.type !== 'success') {
-        throw new Error('Document selection cancelled');
+  const pickSingleFile = async () => {
+    setError(null);
+    const raw = await DocumentPicker.getDocumentAsync({ type: 'text/csv' });
+    // Force casting via unknown to avoid overlap errors
+    const res = (raw as unknown) as DocResult;
+    if (res.type === 'success') {
+      setProcessing(true);
+      const result = await parseStatementFile(res.uri);
+      setProcessing(false);
+      if (result.success) {
+        onParsed(result.transactions);
+        onClose();
+      } else {
+        setError(result.error ?? 'Failed to parse file.');
       }
-      setCurrentFileUri(res.uri);
-      setCurrentFileName(res.name || 'Unknown');
-      await processDocument(res.uri, res.name);
-    } catch (e: any) {
-      setProgress({ ...progress, stage: 'error', progress: 100, currentStep: e.message, currentStepIndex: 5 });
-      setParsing(false);
     }
   };
 
-  const processDocument = async (fileUri: string, fileName?: string, password?: string) => {
-    try {
-      setProgress({ ...progress, stage: 'uploading', progress: 30, currentStep: 'Reading file', currentStepIndex: 2 });
-
-      const options: DocumentParsingOptions = { format: 'pdf', ocrEnabled: true };
-
-      setProgress({ ...progress, stage: 'parsing', progress: 50, currentStep: 'Checking for password protection', currentStepIndex: 3 });
-
-      const result = await parserService.parseDocumentWithPassword(fileUri, options, password);
-
-      if (!result.success && result.errors.some(e => e.message.includes('Password required'))) {
-        setShowPasswordModal(true);
-        return;
+  const pickMultipleFiles = async () => {
+    setError(null);
+    const raw = await DocumentPicker.getDocumentAsync({ type: 'text/csv' });
+    const res = (raw as unknown) as DocResult;
+    if (res.type === 'success') {
+      setProcessing(true);
+      const result = await parseStatementFiles([res.uri]);
+      setProcessing(false);
+      if (result.success) {
+        onParsed(result.transactions);
+        onClose();
+      } else {
+        setError(result.error ?? 'Failed to parse files.');
       }
-
-      if (!result.success && result.errors.some(e => e.message.includes('Incorrect password'))) {
-        setPasswordAttempt(prev => prev + 1);
-        setShowPasswordModal(true);
-        return;
-      }
-
-      setProgress({ ...progress, stage: 'parsing', progress: 80, currentStep: 'Extracting transactions', currentStepIndex: 4 });
-      setProgress({ ...progress, stage: 'complete', progress: 100, currentStep: 'Done', currentStepIndex: 5 });
-
-      onParsed(result);
-      setParsing(false);
-    } catch (e: any) {
-      setProgress({ ...progress, stage: 'error', progress: 100, currentStep: e.message, currentStepIndex: 5 });
-      setParsing(false);
     }
-  };
-
-  const handlePasswordSubmit = async (password: string) => {
-    setShowPasswordModal(false);
-    setProgress({ ...progress, stage: 'parsing', progress: 60, currentStep: 'Unlocking PDF with password', currentStepIndex: 3 });
-    await processDocument(currentFileUri, currentFileName, password);
-  };
-
-  const handlePasswordCancel = () => {
-    setShowPasswordModal(false);
-    setPasswordAttempt(1);
-    setParsing(false);
-    setProgress({ ...progress, stage: 'uploading', progress: 0, currentStep: 'Cancelled', currentStepIndex: 0 });
-  };
-
-  const handleClose = () => {
-    setShowPasswordModal(false);
-    setPasswordAttempt(1);
-    setParsing(false);
-    setCurrentFileUri('');
-    setCurrentFileName('');
-    onClose();
   };
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.title}>Upload Statement</Text>
-
-            {parsing ? (
-              <ProcessingIndicator progress={progress} />
-            ) : (
-              <TouchableOpacity style={styles.uploadButton} onPress={handleDocumentPick}>
-                <Text style={styles.uploadText}>Select File</Text>
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
-          </View>
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Upload Statement CSV</Text>
+          {error && <Text style={styles.error}>{error}</Text>}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={pickSingleFile}
+            disabled={processing}
+          >
+            <Text style={styles.buttonText}>
+              {processing ? 'Processing…' : 'Upload Single CSV'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={pickMultipleFiles}
+            disabled={processing}
+          >
+            <Text style={styles.buttonText}>
+              {processing ? 'Processing…' : 'Upload Multiple CSVs'}
+            </Text>
+          </TouchableOpacity>
+          <Button title="Cancel" onPress={onClose} disabled={processing} />
         </View>
-      </Modal>
-
-      <PasswordInputModal
-        visible={showPasswordModal}
-        onSubmit={handlePasswordSubmit}
-        onCancel={handlePasswordCancel}
-        fileName={currentFileName}
-        attempt={passwordAttempt}
-      />
-    </>
+      </View>
+    </Modal>
   );
 };
 
@@ -150,34 +113,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContainer: {
-    width: '80%',
-    backgroundColor: colors.surface,
+  container: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
+    elevation: 5,
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
-    color: colors.textPrimary,
+    marginBottom: 12,
   },
-  uploadButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+  error: {
+    color: 'red',
+    marginBottom: 8,
   },
-  uploadText: {
-    color: colors.background,
-    fontSize: 16,
+  button: {
+    backgroundColor: '#0066cc',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    marginTop: 10,
   },
-  closeButton: {
-    marginTop: 20,
-  },
-  closeText: {
-    color: colors.secondary,
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
     fontSize: 16,
   },
 });
