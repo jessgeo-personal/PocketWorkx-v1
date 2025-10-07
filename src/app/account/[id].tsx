@@ -1,6 +1,6 @@
 // src/app/account/[id].tsx
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,11 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import {
+  useRouter,
+  useLocalSearchParams,
+  useFocusEffect,
+} from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import ScreenLayout from '../../components/ScreenLayout';
 import { formatCompactCurrency } from '../../utils/currency';
@@ -24,7 +28,7 @@ import {
 
 const AccountDetailScreen: React.FC = () => {
   const router = useRouter();
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{ id: string }>();
   const id = params.id as string;
 
   const [account, setAccount] = useState<Account | null>(null);
@@ -43,7 +47,6 @@ const AccountDetailScreen: React.FC = () => {
     }
   }, [id]);
 
-  // Load on focus (so it refreshes after returning from Add)
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -93,14 +96,11 @@ const AccountDetailScreen: React.FC = () => {
   return (
     <ScreenLayout>
       <View style={styles.container}>
-        {/* Header with Add Transaction */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>{account.nickname}</Text>
           <TouchableOpacity
             style={styles.addIconContainer}
-            onPress={() =>
-              router.push(`/account/${id}/transaction/new`)
-            }
+            onPress={() => router.push(`/account/${id}/transaction/new`)}
           >
             <MaterialIcons
               name="add"
@@ -110,7 +110,6 @@ const AccountDetailScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Account Summary */}
         <Text style={styles.subtitle}>
           {account.bankName} • {account.accountNumberMasked}
         </Text>
@@ -123,15 +122,20 @@ const AccountDetailScreen: React.FC = () => {
             )}
           </Text>
         </View>
-        <Text style={styles.meta}>
-          Type: {account.type.toUpperCase()}
-        </Text>
-        <Text style={styles.meta}>
-          Last synced:{' '}
-          {new Date(account.lastSynced!).toLocaleDateString()}
-        </Text>
+        <View style={styles.accountActions}>
+          <TouchableOpacity
+            style={styles.rowAction}
+            onPress={() => router.push(`/account/${id}/edit`)}
+          >
+            <MaterialIcons
+              name="edit"
+              size={18}
+              color={colors.textPrimary}
+            />
+            <Text style={styles.rowActionText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* Transactions */}
         <Text style={styles.sectionHeader}>Recent Transactions</Text>
         <FlatList
           data={account.transactions}
@@ -144,12 +148,9 @@ const AccountDetailScreen: React.FC = () => {
               onRefresh={onRefresh}
             />
           }
-          style={styles.txnList}
           ListEmptyComponent={() => (
             <View style={styles.emptyTxn}>
-              <Text style={styles.emptyText}>
-                No transactions yet
-              </Text>
+              <Text style={styles.emptyText}>No transactions yet</Text>
               <Text style={styles.emptySubtext}>
                 Add your first transaction using the + button
               </Text>
@@ -181,13 +182,11 @@ const styles = StyleSheet.create({
 
   balanceContainer: { marginVertical: 24 },
   balanceLabel: { fontSize: 14, color: '#999999', marginBottom: 4 },
-  balanceValue: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.secondary,
-  },
+  balanceValue: { fontSize: 32, fontWeight: '700', color: colors.secondary },
 
-  meta: { fontSize: 12, color: '#666666', marginBottom: 8 },
+  accountActions: { flexDirection: 'row', marginBottom: 16 },
+  rowAction: { flexDirection: 'row', alignItems: 'center' },
+  rowActionText: { fontSize: 13, color: colors.textPrimary, marginLeft: 6 },
 
   sectionHeader: {
     fontSize: 18,
@@ -197,7 +196,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  txnList: { flexGrow: 0 },
   txnRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
